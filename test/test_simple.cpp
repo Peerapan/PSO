@@ -64,9 +64,6 @@ int main(int argc, char** argv){
 	double cL = 0;
 	double cN = 0;
 	int noRep = 30; //number of replications
-	// starting time and finish time using DateTime datatype
-	
-	// elapsed time using TimeSpan datatype
 	
 	// opening output file
 	printf("Number of Particle  \t %d \n", noPar);

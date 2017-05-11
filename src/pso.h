@@ -32,7 +32,10 @@ public:
 	}
 	
 	~PSO(){
-	
+		if(sSwarm){
+			delete sSwarm;
+			sSwarm = NULL;
+		}
 	}
 	
 	void SetDimension(int par, int dim)
@@ -91,6 +94,18 @@ public:
 			}
 			w -= decr;
 		}
+		
+		for(int i = 0; i < sSwarm->Member; i++){
+			delete u1[i];
+			delete u2[i];
+			delete u3[i];
+			delete u4[i];
+		}
+		delete u1;
+		delete u2;
+		delete u3;
+		delete u4;
+		u1 = u2 = u3 = u4 = NULL;
 	}
 
 	void Evaluate(){
@@ -99,7 +114,7 @@ public:
 			sSwarm->pParticle[j]->Objective = Objective(sSwarm->pParticle[j]);
 	}
 
-	virtual double Objective(Particle* p){
+	virtual double Objective(Particle*& p){
 		//empty function to be override in the problem specific definition
 		//to calculate objective function of a particle
 		return 0;
