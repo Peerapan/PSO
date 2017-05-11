@@ -1,7 +1,12 @@
+#ifndef PSO_H
+#define PSO_H
+
 #include <math.h>
 #include <stdio.h>
+#include "swarm.h"
 
 class PSO{
+public:
 	double wmax;  //maximum value of w
 	double wmin;  //minimum value of w
 	double cp;    //parameter cp
@@ -13,7 +18,7 @@ class PSO{
 	int nDim;     //number of dimension
 	int NB;       //number of neighbors
 
-	Swarm sSwarm*;
+	Swarm* sSwarm;
 
 	PSO(int nIter, int nNB, double dwmax, double dwmin, double dcp, double dcg, double dcl, double dcn){
 		Iter = nIter;
@@ -50,17 +55,10 @@ class PSO{
 		Evaluate();
 		sSwarm->UpdateBest(NB);
 
-		if (debug)
-		{
-			sSwarm->EvalDispersion();
-			sSwarm->EvalStatObj();
-			printf("%d \t %lf \t %lf  \t %lf  \t %lf  \t %lf  \t %lf", i, sSwarm->posBest, sSwarm->pParticle[sSwarm->posBest]->ObjectiveP, sSwarm->Dispersion, sSwarm->AvgObj, sSwarm->MinObj, sSwarm->MaxObj);
-		}
-
-		double u1** = new double[sSwarm->Member];
-		double u2** = new double[sSwarm->Member];
-		double u3** = new double[sSwarm->Member];
-		double u4** = new double[sSwarm->Member];
+		double **u1 = new double*[sSwarm->Member];
+		double **u2 = new double*[sSwarm->Member];
+		double **u3 = new double*[sSwarm->Member];
+		double **u4 = new double*[sSwarm->Member];
 		for(int i = 0; i < sSwarm->Member; i++){
 			u1[i] = new double[sSwarm->pParticle[0]->Dimension];
 			u2[i] = new double[sSwarm->pParticle[0]->Dimension];
@@ -73,7 +71,7 @@ class PSO{
 			//generate random number for the iteration process
 			for (int j = 0; j < sSwarm->Member; j++)
 			{
-				for (int k = 0; k < sSwarm->pParticle[0].Dimension; k++)
+				for (int k = 0; k < sSwarm->pParticle[0]->Dimension; k++)
 				{
 					u1[j][k] = rand();
 					u2[j][k] = rand();
@@ -89,7 +87,7 @@ class PSO{
 			{
 				sSwarm->EvalDispersion();
 				sSwarm->EvalStatObj();
-				printf("%d \t %lf \t %lf  \t %lf  \t %lf  \t %lf  \t %lf", i, sSwarm->posBest, sSwarm->pParticle[sSwarm->posBest]->ObjectiveP, sSwarm->Dispersion, sSwarm->AvgObj, sSwarm->MinObj, sSwarm->MaxObj);
+				printf("%d \t %d \t %lf  \t %lf  \t %lf  \t %lf  \t %lf", i, sSwarm->posBest, sSwarm->pParticle[sSwarm->posBest]->ObjectiveP, sSwarm->Dispersion, sSwarm->AvgObj, sSwarm->MinObj, sSwarm->MaxObj);
 			}
 			w -= decr;
 		}
@@ -101,7 +99,7 @@ class PSO{
 			sSwarm->pParticle[j]->Objective = Objective(sSwarm->pParticle[j]);
 	}
 
-	virtual double Objective(Particle p){
+	virtual double Objective(Particle* p){
 		//empty function to be override in the problem specific definition
 		//to calculate objective function of a particle
 		return 0;
@@ -112,3 +110,5 @@ class PSO{
 		//to display the result
 	}
 };
+
+#endif

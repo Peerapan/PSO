@@ -1,5 +1,11 @@
+#ifndef SWARM_H
+#define SWARM_H
+
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
+
+#include "particle.h"
 
 class Swarm{
 public:
@@ -14,28 +20,27 @@ public:
 	//definition array of particle
 	Particle** pParticle;
 
-	Swarm(int nPar, int nDim)
-	{   // construct a swarm with nPar particles,
+	Swarm(int nPar, int nDim){
+		// construct a swarm with nPar particles,
 		// each particle with nDim dimension
 		Member = nPar;
-		pParticle = new Particle[Member];
+		pParticle = new Particle* [Member];
 
-		for (int i = 0; i < Member; i++)
-		{	//Initialize particles
+		for (int i = 0; i < Member; i++){
+			//Initialize particles
 			pParticle[i] = new Particle(nDim);
 		}
 	}
 	
 	~Swarm(){
-		for (int i = 0; i < Member; i++)
+		for (int i = 0; i < Member; i++){
 			delete pParticle[i];
 		}
 		delete pParticle;
 	}
 
-	void Move(double w, double cp, double cg, double cl, double cn, double** r1, double** r2, double** r3, double** r4)
-	{	//moving swarm ...
-
+	void Move(double w, double cp, double cg, double cl, double cn, double** r1, double** r2, double** r3, double** r4){
+		//moving swarm ...
 		for (int i = 0; i < Member; i++)
 		{
 			for (int j = 0; j < pParticle[i]->Dimension; j++)
@@ -114,12 +119,12 @@ public:
 				else
 					n_temp = 0;
 
-				FDRBest = (pParticle[i]->Objective - pParticle[n_temp]->ObjectiveP) / abs(pParticle[i]->Position[j] - pParticle[n_temp]->BestP[j]);
+				FDRBest = (pParticle[i]->Objective - pParticle[n_temp]->ObjectiveP) / fabs(pParticle[i]->Position[j] - pParticle[n_temp]->BestP[j]);
 
 				for (int k = 0; k < Member; k++)
 				{
 					if (i == k) continue;
-					FDR = (pParticle[i]->Objective - pParticle[k]->ObjectiveP) / abs(pParticle[i]->Position[j] - pParticle[k]->BestP[j]);
+					FDR = (pParticle[i]->Objective - pParticle[k]->ObjectiveP) / fabs(pParticle[i]->Position[j] - pParticle[k]->BestP[j]);
 					if (FDR > FDRBest)
 					{
 						n_temp = k;
@@ -154,9 +159,8 @@ public:
 		double result = 0;
 		for (int i = 0; i < this->Member; i++)
 		{
-			for (int j = 0; j < this->pParticle[i]->Dimension; j++)
-			{
-				result += abs(this->pParticle[i]->Position[j] - this->pParticle[this->posBest]->BestP[j]);
+			for (int j = 0; j < this->pParticle[i]->Dimension; j++){
+				result += fabs(this->pParticle[i]->Position[j] - this->pParticle[this->posBest]->BestP[j]);
 			}
 		}
 		this->Dispersion = result / this->Member / this->pParticle[0]->Dimension;
@@ -168,7 +172,7 @@ public:
 		double result = 0;
 		for (int i = 0; i < this->Member; i++)
 			for (int j = 0; j < this->pParticle[i]->Dimension; j++)
-				result += abs(this->pParticle[i]->Velocity[j]);
+				result += fabs(this->pParticle[i]->Velocity[j]);
 
 		this->VelIndex = result / this->Member / this->pParticle[0]->Dimension;
 	}
@@ -189,4 +193,6 @@ public:
 		}
 		AvgObj /= this->Member;
 	}
-}
+};
+
+#endif

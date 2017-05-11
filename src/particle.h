@@ -1,3 +1,6 @@
+#ifndef PARTICLE_H
+#define PARTICLE_H
+
 class Particle{
 public:
 	int Dimension;     //particle dimension
@@ -6,8 +9,8 @@ public:
 	double* Velocity;   //current particle velocity
 	double* Neighbor;   //near neighbor best position
 	double* BestP;      //previous best particle position
-	double* Objective;     //current particle objective function
-	double* ObjectiveP;    //previous best particle objective function
+	double Objective;     //current particle objective function
+	double ObjectiveP;    //previous best particle objective function
 	double* PosMax;     //maximum position of particle
 	double* PosMin;     //minimum position of particle 
 
@@ -31,3 +34,5 @@ public:
 		delete PosMin;
 	}
 };
+
+#endif
