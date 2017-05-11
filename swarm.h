@@ -1,4 +1,5 @@
 #include <math.h>
+#include <stdio.h>
 
 class Swarm{
 public:
@@ -133,17 +134,17 @@ public:
 	void DisplayBest()
 	{	//display the best particle
 
-// 		Console->Write("\n");
-// 		Console->Write("Best Particle in the Swarm\n");
-// 		Console->Write("--------------------------\n");
-// 		Console->Write("position:\n");
-// 		Console->Write("---------\n");
-// 		for (int j = 0; j < pParticle[posBest]->Dimension; j++)
-// 		{
-// 			Console->Write("dimension {0}: {1}\n", j, pParticle[posBest]->Position[j]);
-// 		}
-// 		Console->Write("---------\n");
-// 		Console->Write("objective: {0}\n", pParticle[posBest]->ObjectiveP);
+		printf("\n");
+		printf("Best Particle in the Swarm\n");
+		printf("--------------------------\n");
+		printf("position:\n");
+		printf("---------\n");
+		for (int j = 0; j < pParticle[posBest]->Dimension; j++)
+		{
+			printf("dimension %d: %lf\n", j, pParticle[posBest]->Position[j]);
+		}
+		printf("---------\n");
+		printf("objective: %lf\n", pParticle[posBest]->ObjectiveP);
 
 	}
 

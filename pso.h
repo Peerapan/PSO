@@ -1,3 +1,6 @@
+#include <math.h>
+#include <stdio.h>
+
 class PSO{
 	double wmax;  //maximum value of w
 	double wmin;  //minimum value of w
@@ -51,13 +54,19 @@ class PSO{
 		{
 			sSwarm->EvalDispersion();
 			sSwarm->EvalStatObj();
-// 			t.WriteLine("{0} \t {1}  \t {2}  \t {3} \t  {4}  \t {5} \t  {6}", 0, sSwarm.posBest, sSwarm.pParticle[sSwarm.posBest].ObjectiveP, sSwarm.Dispersion, sSwarm.AvgObj, sSwarm.MinObj, sSwarm.MaxObj);
+			printf("%d \t %lf \t %lf  \t %lf  \t %lf  \t %lf  \t %lf", i, sSwarm->posBest, sSwarm->pParticle[sSwarm->posBest]->ObjectiveP, sSwarm->Dispersion, sSwarm->AvgObj, sSwarm->MinObj, sSwarm->MaxObj);
 		}
 
-// 		double u1** = new double[sSwarm->Member, sSwarm.pParticle[0].Dimension];
-// 		double u2** = new double[sSwarm->Member, sSwarm.pParticle[0].Dimension];
-// 		double u3** = new double[sSwarm->Member, sSwarm.pParticle[0].Dimension];
-// 		double u4** = new double[sSwarm->Member, sSwarm.pParticle[0].Dimension];
+		double u1** = new double[sSwarm->Member];
+		double u2** = new double[sSwarm->Member];
+		double u3** = new double[sSwarm->Member];
+		double u4** = new double[sSwarm->Member];
+		for(int i = 0; i < sSwarm->Member; i++){
+			u1[i] = new double[sSwarm->pParticle[0]->Dimension];
+			u2[i] = new double[sSwarm->pParticle[0]->Dimension];
+			u3[i] = new double[sSwarm->pParticle[0]->Dimension];
+			u4[i] = new double[sSwarm->pParticle[0]->Dimension];
+		}
 
 		for (int i = 1; i < Iter; i++)
 		{
@@ -66,10 +75,10 @@ class PSO{
 			{
 				for (int k = 0; k < sSwarm->pParticle[0].Dimension; k++)
 				{
-// 					u1[j][k] = rand.NextDouble();
-// 					u2[j][k] = rand.NextDouble();
-// 					u3[j][k] = rand.NextDouble();
-// 					u4[j][k] = rand.NextDouble();
+					u1[j][k] = rand();
+					u2[j][k] = rand();
+					u3[j][k] = rand();
+					u4[j][k] = rand();
 				}
 			}
 
@@ -80,7 +89,7 @@ class PSO{
 			{
 				sSwarm->EvalDispersion();
 				sSwarm->EvalStatObj();
-// 				t.WriteLine("{0} \t {1} \t {2}  \t {3}  \t {4}  \t {5}  \t {6}", i, sSwarm.posBest, sSwarm.pParticle[sSwarm.posBest].ObjectiveP, sSwarm.Dispersion, sSwarm.AvgObj, sSwarm.MinObj, sSwarm.MaxObj);
+				printf("%d \t %lf \t %lf  \t %lf  \t %lf  \t %lf  \t %lf", i, sSwarm->posBest, sSwarm->pParticle[sSwarm->posBest]->ObjectiveP, sSwarm->Dispersion, sSwarm->AvgObj, sSwarm->MinObj, sSwarm->MaxObj);
 			}
 			w -= decr;
 		}
@@ -88,8 +97,8 @@ class PSO{
 
 	void Evaluate(){
 		//evaluate objective function value of each swarm member
-		for (int j = 0; j < sSwarm.Member; j++)
-			sSwarm.pParticle[j].Objective = Objective(sSwarm.pParticle[j]);
+		for (int j = 0; j < sSwarm->Member; j++)
+			sSwarm->pParticle[j]->Objective = Objective(sSwarm->pParticle[j]);
 	}
 
 	virtual double Objective(Particle p){
