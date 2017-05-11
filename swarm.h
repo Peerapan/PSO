@@ -1,3 +1,5 @@
+#include <math.h>
+
 class Swarm{
 public:
 	int Member;			//number of swarm member
@@ -30,30 +32,30 @@ public:
 		delete pParticle;
 	}
 
-	void Move(double w, double cp, double cg, double cl, double cn, double[,] r1, double[,] r2, double[,] r3, double[,] r4)
+	void Move(double w, double cp, double cg, double cl, double cn, double** r1, double** r2, double** r3, double** r4)
 	{	//moving swarm ...
 
 		for (int i = 0; i < Member; i++)
 		{
-			for (int j = 0; j < pParticle[i].Dimension; j++)
+			for (int j = 0; j < pParticle[i]->Dimension; j++)
 			{
-				pParticle[i].Velocity[j] *= w;
-				pParticle[i].Velocity[j] += cp * r1[i, j] * (pParticle[i].BestP[j] - pParticle[i].Position[j]);
-				pParticle[i].Velocity[j] += cg * r2[i, j] * (pParticle[posBest].BestP[j] - pParticle[i].Position[j]);
-				pParticle[i].Velocity[j] += cl * r3[i, j] * (pParticle[pParticle[i].localBest].BestP[j] - pParticle[i].Position[j]);
-				pParticle[i].Velocity[j] += cn * r4[i, j] * (pParticle[i].Neighbor[j] - pParticle[i].Position[j]);
+				pParticle[i]->Velocity[j] *= w;
+				pParticle[i]->Velocity[j] += cp * r1[i][j] * (pParticle[i]->BestP[j] - pParticle[i]->Position[j]);
+				pParticle[i]->Velocity[j] += cg * r2[i][j] * (pParticle[posBest]->BestP[j] - pParticle[i]->Position[j]);
+				pParticle[i]->Velocity[j] += cl * r3[i][j] * (pParticle[pParticle[i]->localBest]->BestP[j] - pParticle[i]->Position[j]);
+				pParticle[i]->Velocity[j] += cn * r4[i][j] * (pParticle[i]->Neighbor[j] - pParticle[i]->Position[j]);
 
-				pParticle[i].Position[j] += pParticle[i].Velocity[j];
+				pParticle[i]->Position[j] += pParticle[i]->Velocity[j];
 
-				if (pParticle[i].Position[j] > pParticle[i].PosMax[j])
+				if (pParticle[i]->Position[j] > pParticle[i]->PosMax[j])
 				{
-					pParticle[i].Position[j] = pParticle[i].PosMax[j];
-					pParticle[i].Velocity[j] = 0;
+					pParticle[i]->Position[j] = pParticle[i]->PosMax[j];
+					pParticle[i]->Velocity[j] = 0;
 				}
-				if (pParticle[i].Position[j] < pParticle[i].PosMin[j])
+				if (pParticle[i]->Position[j] < pParticle[i]->PosMin[j])
 				{
-					pParticle[i].Position[j] = pParticle[i].PosMin[j];
-					pParticle[i].Velocity[j] = 0;
+					pParticle[i]->Position[j] = pParticle[i]->PosMin[j];
+					pParticle[i]->Velocity[j] = 0;
 				}
 			}
 		}
@@ -69,23 +71,23 @@ public:
 		//update personal best
 		for (int i = 0; i < Member; i++)
 		{
-			if (pParticle[i].Objective < pParticle[i].ObjectiveP)
+			if (pParticle[i]->Objective < pParticle[i]->ObjectiveP)
 			{
-				pParticle[i].ObjectiveP = pParticle[i].Objective;
-				for (int j = 0; j < pParticle[i].Dimension; j++)
-					pParticle[i].BestP[j] = pParticle[i].Position[j];
+				pParticle[i]->ObjectiveP = pParticle[i]->Objective;
+				for (int j = 0; j < pParticle[i]->Dimension; j++)
+					pParticle[i]->BestP[j] = pParticle[i]->Position[j];
 			}
 		}
 
 		//update global best
 		for (int i = 0; i < Member; i++)
-			if (pParticle[i].ObjectiveP < pParticle[posBest].ObjectiveP)
+			if (pParticle[i]->ObjectiveP < pParticle[posBest]->ObjectiveP)
 				posBest = i;
 
 		//update local best
 		for (int i = 0; i < Member; i++)
 		{
-			pParticle[i].localBest = i;
+			pParticle[i]->localBest = i;
 
 			for (int j = i - nbSize / 2; j <= i + nbSize / 2; j++)
 			{
@@ -96,34 +98,34 @@ public:
 					l_temp += Member;
 				if (l_temp >= Member)
 					l_temp -= Member;
-				if (pParticle[l_temp].ObjectiveP < pParticle[pParticle[i].localBest].ObjectiveP)
-					pParticle[i].localBest = l_temp;
+				if (pParticle[l_temp]->ObjectiveP < pParticle[pParticle[i]->localBest]->ObjectiveP)
+					pParticle[i]->localBest = l_temp;
 			}
 		}
 
 		//update near neighbor best
 		for (int i = 0; i < Member; i++)
 		{
-			for (int j = 0; j < pParticle[i].Dimension; j++)
+			for (int j = 0; j < pParticle[i]->Dimension; j++)
 			{
 				if (i == 0)
 					n_temp = 1;
 				else
 					n_temp = 0;
 
-				FDRBest = (pParticle[i].Objective - pParticle[n_temp].ObjectiveP) / Math.Abs(pParticle[i].Position[j] - pParticle[n_temp].BestP[j]);
+				FDRBest = (pParticle[i]->Objective - pParticle[n_temp]->ObjectiveP) / abs(pParticle[i]->Position[j] - pParticle[n_temp]->BestP[j]);
 
 				for (int k = 0; k < Member; k++)
 				{
 					if (i == k) continue;
-					FDR = (pParticle[i].Objective - pParticle[k].ObjectiveP) / Math.Abs(pParticle[i].Position[j] - pParticle[k].BestP[j]);
+					FDR = (pParticle[i]->Objective - pParticle[k]->ObjectiveP) / abs(pParticle[i]->Position[j] - pParticle[k]->BestP[j]);
 					if (FDR > FDRBest)
 					{
 						n_temp = k;
 						FDRBest = FDR;
 					}
 				}
-				pParticle[i].Neighbor[j] = pParticle[n_temp].BestP[j];
+				pParticle[i]->Neighbor[j] = pParticle[n_temp]->BestP[j];
 			}
 		}
 	}
@@ -131,17 +133,17 @@ public:
 	void DisplayBest()
 	{	//display the best particle
 
-// 		Console.Write("\n");
-// 		Console.Write("Best Particle in the Swarm\n");
-// 		Console.Write("--------------------------\n");
-// 		Console.Write("position:\n");
-// 		Console.Write("---------\n");
-// 		for (int j = 0; j < pParticle[posBest].Dimension; j++)
+// 		Console->Write("\n");
+// 		Console->Write("Best Particle in the Swarm\n");
+// 		Console->Write("--------------------------\n");
+// 		Console->Write("position:\n");
+// 		Console->Write("---------\n");
+// 		for (int j = 0; j < pParticle[posBest]->Dimension; j++)
 // 		{
-// 			Console.Write("dimension {0}: {1}\n", j, pParticle[posBest].Position[j]);
+// 			Console->Write("dimension {0}: {1}\n", j, pParticle[posBest]->Position[j]);
 // 		}
-// 		Console.Write("---------\n");
-// 		Console.Write("objective: {0}\n", pParticle[posBest].ObjectiveP);
+// 		Console->Write("---------\n");
+// 		Console->Write("objective: {0}\n", pParticle[posBest]->ObjectiveP);
 
 	}
 
@@ -149,25 +151,25 @@ public:
 	{	//evaluate dispersion index
 
 		double result = 0;
-		for (int i = 0; i < this.Member; i++)
+		for (int i = 0; i < this->Member; i++)
 		{
-			for (int j = 0; j < this.pParticle[i].Dimension; j++)
+			for (int j = 0; j < this->pParticle[i]->Dimension; j++)
 			{
-				result += System.Math.Abs(this.pParticle[i].Position[j] - this.pParticle[this.posBest].BestP[j]);
+				result += abs(this->pParticle[i]->Position[j] - this->pParticle[this->posBest]->BestP[j]);
 			}
 		}
-		this.Dispersion = result / this.Member / this.pParticle[0].Dimension;
+		this->Dispersion = result / this->Member / this->pParticle[0]->Dimension;
 	}
 
 	void EvalVelIndex()
 	{	//evaluate velocity index
 
 		double result = 0;
-		for (int i = 0; i < this.Member; i++)
-			for (int j = 0; j < this.pParticle[i].Dimension; j++)
-				result += System.Math.Abs(this.pParticle[i].Velocity[j]);
+		for (int i = 0; i < this->Member; i++)
+			for (int j = 0; j < this->pParticle[i]->Dimension; j++)
+				result += abs(this->pParticle[i]->Velocity[j]);
 
-		this.VelIndex = result / this.Member / this.pParticle[0].Dimension;
+		this->VelIndex = result / this->Member / this->pParticle[0]->Dimension;
 	}
 
 	void EvalStatObj()
@@ -176,14 +178,14 @@ public:
 		MinObj = 1.7E308;
 		AvgObj = 0;
 
-		for (int i = 0; i < this.Member; i++)
+		for (int i = 0; i < this->Member; i++)
 		{
-			if (MaxObj < this.pParticle[i].Objective)
-				MaxObj = this.pParticle[i].Objective;
-			if (MinObj > this.pParticle[i].Objective)
-				MinObj = this.pParticle[i].Objective;
-			AvgObj += this.pParticle[i].Objective;
+			if (MaxObj < this->pParticle[i]->Objective)
+				MaxObj = this->pParticle[i]->Objective;
+			if (MinObj > this->pParticle[i]->Objective)
+				MinObj = this->pParticle[i]->Objective;
+			AvgObj += this->pParticle[i]->Objective;
 		}
-		AvgObj /= this.Member;
+		AvgObj /= this->Member;
 	}
 }
