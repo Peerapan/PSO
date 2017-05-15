@@ -76,10 +76,10 @@ public:
 			{
 				for (int k = 0; k < sSwarm->pParticle[0]->Dimension; k++)
 				{
-					u1[j][k] = rand();
-					u2[j][k] = rand();
-					u3[j][k] = rand();
-					u4[j][k] = rand();
+					u1[j][k] = ((double) rand() / (RAND_MAX));
+					u2[j][k] = ((double) rand() / (RAND_MAX));
+					u3[j][k] = ((double) rand() / (RAND_MAX));
+					u4[j][k] = ((double) rand() / (RAND_MAX));
 				}
 			}
 
@@ -90,7 +90,7 @@ public:
 			{
 				sSwarm->EvalDispersion();
 				sSwarm->EvalStatObj();
-				printf("%d \t %d \t %lf  \t %lf  \t %lf  \t %lf  \t %lf", i, sSwarm->posBest, sSwarm->pParticle[sSwarm->posBest]->ObjectiveP, sSwarm->Dispersion, sSwarm->AvgObj, sSwarm->MinObj, sSwarm->MaxObj);
+				printf("%d \t %d \t %lf  \t %lf  \t %lf  \t %lf  \t %lf\n", i, sSwarm->posBest, sSwarm->pParticle[sSwarm->posBest]->ObjectiveP, sSwarm->Dispersion, sSwarm->AvgObj, sSwarm->MinObj, sSwarm->MaxObj);
 			}
 			w -= decr;
 		}

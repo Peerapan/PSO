@@ -21,7 +21,7 @@ public:
 		printf("-------\n");
 		//write the position of the best particle
 		for(int i=0; i<this->sSwarm->pParticle[this->sSwarm->posBest]->Dimension; i++)
-			printf("x(%d) = %lf\n", i, this->sSwarm->pParticle[this->sSwarm->posBest]->BestP[i]);
+		printf("x(%d) = %lf\n", i, this->sSwarm->pParticle[this->sSwarm->posBest]->BestP[i]);
 		printf("f(x) = %lf\n", this->sSwarm->pParticle[this->sSwarm->posBest]->ObjectiveP);
 	}
 	
