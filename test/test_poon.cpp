@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <math.h>
 
 #include "function.h"
 
@@ -44,30 +45,30 @@ int main (int argv, char** argc){
 			}
 		}
 		
-		/*
 		double* pbest;
-		char* xpbest;
-		for(int i=0; i<popsize; i+=1){
-			char* xn = (char *)malloc(sizeof(char)*N);
-			for(int j=0; j<N; j+=1){
-				
-			}
-//			fx[i] = main_function(lenxn, xn);
-		}
+		char** xpbest;
+		char* xgbest;
+		
+		
+		
 		pbest = fx;
-//		xpbest = x;
+		xpbest = x;
 		double w1 = 0.5;
 		double c1 = 1;
 		double c2 = 1;
 		int maxiter = 1000;
 		double vmax = 4;
 		
+		int l;
+		double gbest;
+		minimum(l, gbest, popsize, fx);
+//		xgbest = x[l];
+		
 		for(int iter=1;iter<=maxiter;iter++){
 //			double w = (maxiter-iter)/maxiter;
 			double w = 0.5;
-			for(int i=0;i<popsize;i++){
-				
-			}
+			
+			
 			
 			char** oneadd = (char**)malloc(sizeof(char*)*popsize);
 			char** zeroadd = (char**)malloc(sizeof(char*)*popsize);
@@ -77,35 +78,59 @@ int main (int argv, char** argc){
 				memset(oneadd,0,malloc_size);
 				memset(zeroadd,0,malloc_size);
 			}
+			double c3 = c1*rand();
+			double dd3 = c2*rand();
 			
 			for(int i=0;i<popsize;i++){
 				for(int j=0;j<malloc_size;j++){
 					if(xpbest[i][j] == 0){
-						
+						oneadd[i][j] = oneadd[i][j]-c3;
+						zeroadd[i][j] = zeroadd[i][j]+c3;
 					}else{
-					
+						oneadd[i][j] = oneadd[i][j]+c3;
+						zeroadd[i][j] = zeroadd[i][j]-c3;
 					}
 					if(xgbest[j] == 0){
-						
+						oneadd[i][j] = oneadd[i][j]-dd3;
+						zeroadd[i][j] = zeroadd[i][j]+dd3;
 					}else{
-						
+						oneadd[i][j] = oneadd[i][j]+dd3;
+						zeroadd[i][j] = zeroadd[i][j]-dd3;
 					}
 				}
 			}
 			
-			for()
+			for(int i=0;i<popsize;i++){
+				for(int j=0;j<malloc_size;j++){
+					one_vel[i][j]=w1*one_vel[i][j]+oneadd[i][j];
+					zero_vel[i][j]=w1*zero_vel[i][j]+zeroadd[i][j];
+					if( fabs(vel[i][j]) > vmax ){
+						zero_vel[i][j] = vmax * sign(zero_vel[i][j]);
+						one_vel[i][j] = vmax * sign(one_vel[i][j]);
+					}
+					if(x[i][j] == 1){
+						vel[i][j]=zero_vel[i][j];
+					}else{
+						vel[i][j]=one_vel[i][j];
+					}
+//					if(temp[i][j] < logsig(vel[i][j])){
+//						x[i][j] = !x[i][j];
+//					}else{
+//						x[i][j] = x[i][j];
+//					}
+				}
+			}
 			
 		}
 		
-		double gbest, pbest;
-		if(Gbest1 > gbest){
-			Gbest1 = gbest;
-		}
-		double temp = sum(pbest)/popsize;
-		if(Pbest1>temp){
-			Pbest1 = temp;
-		}
-		*/
+//		double gbest, pbest;
+//		if(Gbest1 > gbest){
+//			Gbest1 = gbest;
+//		}
+//		double temp = sum(pbest)/popsize;
+//		if(Pbest1>temp){
+//			Pbest1 = temp;
+//		}
 	}
 	free(ones);
 	free(zeros);

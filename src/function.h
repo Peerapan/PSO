@@ -1,4 +1,5 @@
 #include <math.h>
+#include <limits>
 
 double sigmoid(double x)
 {
@@ -12,6 +13,10 @@ double sigmoid(double x)
 	return_value = 1 / (1 + exp_value);
 	
 	return return_value;
+}
+
+double logsig(double n){
+	return 1 / (1 + exp(-n));
 }
 
 int mybin2dec(int l, char* x){
@@ -28,9 +33,34 @@ int mybin2dec(int l, char* x){
 	return y;
 }
 
-double main_function(int lenx, char* x){
+int sign(double x){
+	return (x > 0) ? 1 : ((x < 0) ? -1 : 0);
+}
+
+void minimum(int& index, double& min_val, int fx_size, double* fx){
+	min_val = std::numeric_limits<double>::max();
+	index = -1;
+	for(int i=0;i<fx_size;i++){
+		if( fx[i] < min_val ){
+			min_val = fx[i];
+			index = i;
+		}
+	}
+}
+
+/*
+void cal(){
+	for(int i=0;i<popsize;i++){
+		for(int j=0;j<N;j++){
+			for()
+		}
+	}
+}
+ */
+
+double main_function(int x_size, char* x){
 	double y = 0;
-	for(int i=0; i<lenx; i++){
+	for(int i=0; i<x_size; i++){
 		y += x[i]*x[i];
 	}
 	return y;
