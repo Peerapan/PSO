@@ -48,17 +48,17 @@ void minimum(int& index, double& min_val, int fx_size, double* fx){
 	}
 }
 
-/*
-void cal(){
-	for(int i=0;i<popsize;i++){
-		for(int j=0;j<N;j++){
-			for()
+double fx_function1(int x_size, char* x){
+	double y = 0;
+	for(int i=0;i<x_size;i++){
+		if(x[i]){
+			y += x[i];
 		}
 	}
+	return y;
 }
- */
 
-double main_function(int x_size, char* x){
+double fx_function2(int x_size, char* x){
 	double y = 0;
 	for(int i=0; i<x_size; i++){
 		y += x[i]*x[i];
