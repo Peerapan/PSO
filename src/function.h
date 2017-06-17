@@ -19,20 +19,6 @@ double logsig(double n){
 	return 1 / (1 + exp(-n));
 }
 
-int mybin2dec(int l, char* x){
-	int y=0;
-	if(x==0){
-		y=0;
-	}
-	else{
-		y=0;
-		for(int i=0;i<=l-1;i++){
-			y=y+x[i+1]*pow(2,i);
-		}
-	}
-	return y;
-}
-
 int sign(double x){
 	return (x > 0) ? 1 : ((x < 0) ? -1 : 0);
 }
@@ -54,14 +40,6 @@ double fx_function1(int x_size, char* x){
 		if(x[i]){
 			y += x[i];
 		}
-	}
-	return y;
-}
-
-double fx_function2(int x_size, char* x){
-	double y = 0;
-	for(int i=0; i<x_size; i++){
-		y += x[i]*x[i];
 	}
 	return y;
 }
