@@ -37,7 +37,7 @@ int binary_2_decimal(int bsize, char* bits){
 	return sum;
 }
 
-double fx_function_solve(int x_size, char* x){
+double fx_function_solve(int x_size, char* x, bool display){
 	int max_size = ls+ss;
 	int mss = ss;
 	int mls = ls+ss;
@@ -60,8 +60,9 @@ double fx_function_solve(int x_size, char* x){
 		set_area[ia] = set_area[ma-1];
 		mss--;
 		ma--;
-//		printf("SS: %d(%d) %d(%d), \n", ic, tc, ia, ta);
-		y += time_side_to_a[0][ta] + time_a_to_c[ta][tc] + time_side_to_c[0][tc];
+		double sum = time_side_to_a[0][ta] + time_a_to_c[ta][tc] + time_side_to_c[0][tc];
+		if(display) printf("SS: 1, %d, %d, %d, %d, %lf\n", i+1, ta+1, tc+1, i+1, sum);
+		y += sum;
 	}
 	for(int i=ss;i<(ls+ss);i++){
 		int ic = binary_2_decimal(bitnum[i*2], &x[start_bit[i*2]]);
@@ -75,10 +76,10 @@ double fx_function_solve(int x_size, char* x){
 		set_area[ia] = set_area[ma-1];
 		mls--;
 		ma--;
-//		printf("LS: %d(%d) %d(%d), \n", ic, tc, ia, ta);
-		y += time_side_to_a[1][ta] + time_a_to_c[ta][tc] + time_side_to_c[1][tc];
+		double sum = time_side_to_a[1][ta] + time_a_to_c[ta][tc] + time_side_to_c[1][tc];
+		if(display) printf("LS: 2, %d, %d, %d, %d, %lf\n", i+1, ta+1, tc+1, i+1, sum);
+		y += sum;
 	}
-//	printf("y = %lf\n", y);
 	return y;
 }
 
@@ -95,9 +96,9 @@ int calculate_malloc_size(){
 		start_bit[i*2+1] = sbit;
 		bitnum[i*2+1] = decimal_2_binary_size(upper[i*2+1]);
 		sbit += bitnum[i*2+1];
-		printf("bit %d(%d:%d), %d(%d:%d)\n",
+/*		printf("bit %d(%d:%d), %d(%d:%d)\n",
 			   start_bit[i*2], upper[i*2], bitnum[i*2],
-			   start_bit[i*2+1], upper[i*2+1], bitnum[i*2+1]);
+			   start_bit[i*2+1], upper[i*2+1], bitnum[i*2+1]); */
 	}
 	for(int j=0;j<ls; j++){
 		int i = j+ss;
@@ -111,11 +112,11 @@ int calculate_malloc_size(){
 		start_bit[i*2+1] = sbit;
 		bitnum[i*2+1] = decimal_2_binary_size(upper[i*2+1]);
 		sbit += bitnum[i*2+1];
-		printf("bit %d(%d:%d), %d(%d:%d)\n",
+/*		printf("bit %d(%d:%d), %d(%d:%d)\n",
 			   start_bit[i*2], upper[i*2], bitnum[i*2],
-			   start_bit[i*2+1], upper[i*2+1], bitnum[i*2+1]);
+			   start_bit[i*2+1], upper[i*2+1], bitnum[i*2+1]); */
 	}
-	printf("count: %d\n", sbit);
+//	printf("count: %d\n", sbit);
 	return sbit;
 }
 
@@ -129,16 +130,16 @@ void read_data(const char* file){
 			time_side_to_a[i] = (double*) malloc(sizeof(double) * free_area);
 			for(int j=0; j<free_area; j++){
 				fscanf(ptr, "%lf", &time_side_to_a[i][j]);
-				printf("%lf ", time_side_to_a[i][j]);
+//				printf("%lf ", time_side_to_a[i][j]);
 			}
-			printf("\n");
+//			printf("\n");
 		}
 		time_side_to_c = (double**) malloc(sizeof(double*) * side_of_working);
 		for(int i=0; i<side_of_working; i++){
 			time_side_to_c[i] = (double*) malloc(sizeof(double) * export_container);
 			for(int j=0; j<export_container; j++){
 				fscanf(ptr, "%lf", &time_side_to_c[i][j]);
-				printf("%lf\n", time_side_to_c[i][j]);
+//				printf("%lf\n", time_side_to_c[i][j]);
 			}
 		}
 		time_a_to_c = (double**) malloc(sizeof(double*) * free_area);
@@ -146,9 +147,9 @@ void read_data(const char* file){
 			time_a_to_c[i] = (double*) malloc(sizeof(double) * export_container);
 			for(int j=0; j<export_container; j++){
 				fscanf(ptr, "%lf", &time_a_to_c[i][j]);
-				printf("%lf ", time_a_to_c[i][j]);
+//				printf("%lf ", time_a_to_c[i][j]);
 			}
-			printf("\n");
+//			printf("\n");
 		}
 	}
 	fclose(ptr);
@@ -184,10 +185,10 @@ void uninit(){
 	free(time_a_to_c);
 }
 
-int main (int argv, char** argc){
-	int malloc_size = init(argc[1]);
+int main (int argc, char** argv){
+	int malloc_size = init(argv[1]);
 	
-	printf("BIT SIZE: %d\n", malloc_size);
+//	printf("BIT SIZE: %d\n", malloc_size);
 	
 	double Pbest1=std::numeric_limits<double>::max();
 	double Gbest1=std::numeric_limits<double>::max();
@@ -220,13 +221,13 @@ int main (int argv, char** argc){
 		}
 		
 		for(int i=0;i<popsize;i++){
-			pbest[i] = fx[i] = fx_function_solve(malloc_size, x[i]);
+			pbest[i] = fx[i] = fx_function_solve(malloc_size, x[i], false);
 		}
 		
 		double w1 = 0.5;
 		double c1 = 1;
 		double c2 = 1;
-		int maxiter = 1000;
+		int maxiter = 100;
 		double vmax = 4;
 		
 		int l;
@@ -239,7 +240,7 @@ int main (int argv, char** argc){
 		for(int iter=1;iter<=maxiter;iter++){
 			double w = 0.5;
 			for(int i=0;i<popsize;i++){
-				fx[i] = fx_function_solve(malloc_size, x[i]);
+				fx[i] = fx_function_solve(malloc_size, x[i], false);
 				if( fx[i] < pbest[i] ){
 					pbest[i] = fx[i];
 					memcpy( xpbest[i], x[i], malloc_size);
@@ -301,10 +302,10 @@ int main (int argv, char** argc){
 		if(Pbest1>temp){
 			Pbest1 = temp;
 		}
-		printf("%lf %lf\n", Gbest1, Pbest1);
+//		printf("%lf %lf\n", Gbest1, Pbest1);
 	}
-	
-	//Display
+	printf("%s : %lf\n", argv[1], Gbest1);
+	fx_function_solve(malloc_size, xgbest, true);
 	
 	for(int i=0;i<popsize;i++){
 		free(x[i]);
