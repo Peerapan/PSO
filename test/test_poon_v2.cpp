@@ -61,7 +61,7 @@ double fx_function_solve(int x_size, char* x, bool display){
 		mss--;
 		ma--;
 		double sum = time_side_to_a[0][ta] + time_a_to_c[ta][tc] + time_side_to_c[0][tc];
-		if(display) printf("SS: 1, %d, %d, %d, %d, %lf\n", i+1, ta+1, tc+1, i+1, sum);
+		if(display) printf("SS: 1, %d, %d, %d, %d, %lf(%lf, %lf, %lf)\n", i+1, ta+1, tc+1, i+1, sum, time_side_to_a[0][ta], time_a_to_c[ta][tc], time_side_to_c[0][tc]);
 		y += sum;
 	}
 	for(int i=ss;i<(ls+ss);i++){
@@ -77,7 +77,7 @@ double fx_function_solve(int x_size, char* x, bool display){
 		mls--;
 		ma--;
 		double sum = time_side_to_a[1][ta] + time_a_to_c[ta][tc] + time_side_to_c[1][tc];
-		if(display) printf("LS: 2, %d, %d, %d, %d, %lf\n", i+1, ta+1, tc+1, i+1, sum);
+		if(display) printf("LS: 2, %d, %d, %d, %d, %lf(%lf, %lf, %lf)\n", i+1, ta+1, tc+1, i+1, sum, time_side_to_a[1][ta], time_a_to_c[ta][tc], time_side_to_c[1][tc]);
 		y += sum;
 	}
 	return y;
