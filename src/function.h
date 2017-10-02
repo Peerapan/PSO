@@ -34,6 +34,25 @@ void minimum(int& index, double& min_val, int fx_size, double* fx){
 	}
 }
 
+int decimal_2_binary_size(int input){
+	int i = 1;
+	while( input > 1 ){
+		input >>= 1;
+		i++;
+	}
+	return i;
+}
+
+int binary_2_decimal(int bsize, char* bits){
+	int j = 1;
+	int sum = 0;
+	for(int i=0;i<bsize;i++){
+		sum += (j * bits[i]);
+		j <<= 1;
+	}
+	return sum;
+}
+
 double fx_function1(int x_size, char* x){
 	double y = 0;
 	for(int i=0;i<x_size;i++){

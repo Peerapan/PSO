@@ -1,0 +1,9 @@
+g++ -O2 -lm -std=c++11 -I./src test/test_simple.cpp -o build/test_simple
+test/test_simple.cpp: In function ‘int main(int, char**)’:
+test/test_simple.cpp:79:11: warning: zero-length gnu_printf format string [-Wformat-zero-length]
+  printf("");
+           ^
+/usr/bin/ld: cannot open output file build/test_simple: No such file or directory
+collect2: error: ld returned 1 exit status
+Makefile:4: recipe for target 'test' failed
+make: *** [test] Error 1

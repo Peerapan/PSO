@@ -76,7 +76,6 @@ int main(int argc, char** argv){
 	printf("Parameter cg        \t %lf \n", cG);
 	printf("Parameter cl        \t %lf \n", cL);
 	printf("Parameter cn        \t %lf \n", cN);
-	printf("");
 	
 	for(int i=0; i<noRep; i++)
 	{
