@@ -3,10 +3,15 @@
 #include <string.h>
 #include <time.h>
 #include <math.h>
-#include <limits>
+
+#include <map>
 #include <set>
 #include <vector>
 #include <string>
+#include <stack>
+#include <limits>
+#include <iostream>
+#include <algorithm>
 
 #include "function.h"
 
@@ -25,31 +30,118 @@ struct dat{
 };
 
 int W, H, L;
-std::set<dat*> containers;
-std::set<dat*> areas;
-std::vector<dat*> cc_containers;
+
 int imp_ss, imp_ls;
-std::vector<int> exp_ss;
-std::vector<int> exp_ls;
-std::vector<std::string> all_commands;
+std::set<int> exp_ss;
+std::set<int> exp_ls;
+std::set<int> res;
 
-std::vector<int> res;
-
-int** table;
+std::map<int, dat*> cc_containers;
+std::map<int, dat*> areas;
+std::vector< std::vector< std::vector<int> > > table;
 
 int* upper;
 int* lower;
 int* start_bit;
 int* bitnum;
 
+int res_steps;
+int imp_ss_steps;
+int exp_ss_steps;
+int res_bits;
+int ss_bits;
+
+std::vector<int> pool;
+
+void reset(){
+
+}
+
+void init_res_pool(){
+    for(int i=0;i<W;i++){
+        for(int j=0;j<L;j++){
+            int k = table[i][j].size()-1;
+            if(k > 0 && res.find(table[i][j][k]) != res.end()){
+                pool.push_back( table[i][j][k] );
+            }
+        }
+    }
+}
+
+void init_exp_pool(){
+    for(int i=0;i<W;i++){
+        for(int j=0;j<L;j++){
+            int k = table[i][j].size()-1;
+            if(k > 0 && exp_ss.find(table[i][j][k]) != res.end()){
+                pool.push_back( table[i][j][k] );
+            }
+        }
+    }
+}
+
+int adjust(int curr, int max_curr, int max_n){
+    return (curr / max_curr ) * max_n;
+}
+
+int pop_pool(std::vector<int>& pool, int idx){
+    int r = pool[idx];
+    pool[idx] = pool[pool.size()-1];
+    pool.pop_back();
+    return r;
+}
+
 double fx_function_solve(int x_size, char* x, bool display) {
     double y = 0;
+    reset();
+    init_res_pool();
+    int start = 0;
+    int all = W*L;
+    int res_bit = decimal_2_binary_size(res_steps);
+    int all_bit = decimal_2_binary_size(all);
+    for(int i=0; i<res_steps; i++){
+        int res_it = binary_2_decimal(res_bit, x+start);
+        start += res_bit;
+        int area_it = binary_2_decimal(all_bit, x+start);
+        start += all_bit;
+        int idx_r = adjust(res_it,all-1,pool.size()-1);
+        int r = pop_pool(pool, idx_r);
+        int des = adjust(area_it,all-1,areas.size()-1);
+        int _x = areas[des]->_h;
+        int _y = areas[des]->_w;
+        int _z = areas[des]->_l;
+        if(display){
+            printf("Move %d( %d, %d, %d ) to ( %d, %d, %d )\n",r ,
+                cc_containers[r]->_h, cc_containers[r]->_w, cc_containers[r]->_l,
+                areas[des]->_h , areas[des]->_w, areas[des]->_l);
+        }
+        y+= abs(cc_containers[r]->_l - areas[des]->_l);
+        //adjust
+//        table[areas[des]->_w][areas[des]->_l].push_back(idx_r);
+//        table[cc_containers[r]->_w][cc_containers[r]->_l].pop_back();
+//        cc_containers[r]->_h = areas[des]->_h;
+//        cc_containers[r]->_w = areas[des]->_w;
+//        cc_containers[r]->_l = areas[des]->_l;
+//        areas.erase(des);
+    }
+    pool.clear();
+    for(int i=0; i<imp_ss_steps+exp_ss_steps; i++){
+        
+    }
     return y;
 }
 
 int calculate_malloc_size() {
     int sbit = 0;
-    
+    res_steps = res.size();
+    res_bits = (decimal_2_binary_size(res_steps) + decimal_2_binary_size(W*L) * res_steps);
+    printf("RES BITS: %d\n", res_bits);
+    imp_ss_steps = imp_ss;
+    exp_ss_steps = exp_ss.size();
+    int max_ss_steps = std::max(imp_ss_steps, exp_ss_steps);
+    int total_ss_steps = imp_ss_steps + exp_ss_steps;
+    ss_bits = (1 + decimal_2_binary_size(total_ss_steps) + decimal_2_binary_size(W*L)) * (total_ss_steps);
+    printf("SS BITS: %d\n", ss_bits);
+    sbit = res_bits + ss_bits;
     return sbit;
 }
 
@@ -62,28 +154,22 @@ void read_data(const char* file) {
         fscanf(ptr, "%d %d %d", &H, &W, &L);
         
         //! malloc table
-        table = (int**)malloc(sizeof(int*) * W);
+        table.resize(W);
         for(int i=0;i<W;i++){
-            table[i] = (int*)malloc(sizeof(int) * L);
-            memset(table[i], 0, L);
+            table[i].resize(L);
         }
         
         fscanf(ptr, "%d", &n);
         for(int i=0; i<n; i++){
             fscanf(ptr, "%d %d %d", &x, &y, &z);
             dat* _a = new dat(x, y, z);
-            containers.insert(_a);
-            dat* _b = new dat(x, y, z);
-            cc_containers.push_back(_b);
-            if( x > table[y][z]){
-                table[y][z] = x;
-            }
+            cc_containers.insert(std::make_pair(i, _a));
         }
         fscanf(ptr, "%d", &n);
         for(int i=0; i<n; i++){
             fscanf(ptr, "%d %d %d", &x, &y, &z);
             dat* _a = new dat(x, y, z);
-            areas.insert(_a);
+            areas.insert(std::make_pair(i, _a));
         }
         fscanf(ptr, "%d", &imp_ss);
 //        fscanf(ptr, "%d", &imp_ls);
@@ -91,8 +177,7 @@ void read_data(const char* file) {
         int t;
         for(int i=0; i<n; i++){
             fscanf(ptr, "%d", &t);
-            exp_ss.push_back(t);
-            dat* _t = cc_containers[i];
+            exp_ss.insert(t);
         }
 //        fscanf(ptr, "%d", &n);
 //        for(int i=0; i<n; i++){
@@ -107,7 +192,33 @@ void read_data(const char* file) {
 }
 
 void analyze(){
-    
+    std::vector<std::pair<int, dat*> > pairs;
+    for (auto itr = cc_containers.begin(); itr != cc_containers.end(); ++itr)
+        pairs.push_back(*itr);
+    std::sort(pairs.begin(), pairs.end(), [=](std::pair<int, dat*>& a, std::pair<int, dat*>& b)
+    {
+        return a.second->_h < b.second->_h;
+    }
+    );
+    for(auto& it : pairs){
+        table[it.second->_w][it.second->_l].push_back(it.first);
+    } 
+    for(int i=0;i<W;i++){
+        for(int j=0;j<L;j++){
+            for(int k=0;k<table[i][j].size();k++){
+                if(exp_ss.find(table[i][j][k]) != exp_ss.end()){
+                    for(int l=k+1; l<table[i][j].size(); l++){
+                        res.insert(table[i][j][l]);
+                    }
+                    break;
+                }
+            }
+        }
+    }
+    //For Debug
+    for(auto& it: res){
+        std::cout << it << std::endl;
+    }
 }
 
 int init(char*& input) {
@@ -122,9 +233,11 @@ void uninit() {
 }
 
 int main(int argc, char** argv) {
-    int malloc_size = init(argv[1]);
-
-    //	printf("BIT SIZE: %d\n", malloc_size);
+//    int malloc_size = init(argv[1]);
+    char* file_name = "./data/example_data.txt";
+    int malloc_size = init(file_name);
+    
+    printf("BIT SIZE: %d\n", malloc_size);
 
     double Pbest1 = std::numeric_limits<double>::max();
     double Gbest1 = std::numeric_limits<double>::max();
@@ -240,7 +353,7 @@ int main(int argc, char** argv) {
         }
         //		printf("%lf %lf\n", Gbest1, Pbest1);
     }
-    printf("%s : %lf\n", argv[1], Gbest1);
+    printf("%s : %lf\n", file_name, Gbest1);
     fx_function_solve(malloc_size, xgbest, true);
 
     for (int i = 0; i < popsize; i++) {
