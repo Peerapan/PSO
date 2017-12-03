@@ -169,7 +169,7 @@ double fx_function_solve(int x_size, char* x, bool display) {
         area_it = binary_2_decimal(last_bit, x+start);
         start += last_bit;
         if(display) printf("It:%d, area_it: %d, all: %d, areas.size(): %d\n", it, area_it, all, area_pool.size());
-        if( opd == 0 || exp_pool.empty() ){
+        if( (opd == 0 && !imp_pool.empty()) || exp_pool.empty() ){
             //! IMPORT
             int idx_a = adjust(area_it,last_num,area_pool.size()-1);
             int a = pop_pool(area_pool, idx_a);
@@ -189,9 +189,9 @@ double fx_function_solve(int x_size, char* x, bool display) {
                 last_x = -1;
                 last_y = -1;
             }
-            duration = ((areas[a]->_l +1) * TRAVEL_TIME) + CONTROL_TIME;
+            duration = ((areas[a]->_w +1) * TRAVEL_TIME) + (2*CONTROL_TIME);
             y += duration;
-            if(display) printf("IMP TRAVEL TO %d (%lf -> %lf)\n",  areas[a]->_l, duration, y);
+            if(display) printf("IMP TRAVEL TO %d, %d [%d] (%lf -> %lf)\n",  areas[a]->_w, areas[a]->_l, a, duration, y);
             last_x = areas[a]->_w;
             last_y = areas[a]->_l;
         }
@@ -205,16 +205,20 @@ double fx_function_solve(int x_size, char* x, bool display) {
 #endif
             double duration = 0;
             if(last_x != -1){
-                duration = ((abs(cc_containers[r]->_l - last_x) + abs(cc_containers[r]->_w - last_y)) * TRAVEL_TIME);
+//                duration = ((abs(cc_containers[r]->_w - last_x) + abs(cc_containers[r]->_l - last_y)) * TRAVEL_TIME);
+                duration = (abs(cc_containers[r]->_w - last_x) * TRAVEL_TIME);
                 y += duration;
-                if(display) printf("EXP TRAVEL FROM %d, %d TO %d, %d (%lf -> %lf)\n", cc_containers[r]->_l, cc_containers[r]->_w, last_x, last_y, duration, y);
+//                if(display) printf("EXP TRAVEL FROM %d, %d TO %d, %d [%d] (%lf -> %lf)\n", last_x, last_y, cc_containers[r]->_w, cc_containers[r]->_l, r, duration, y);
+                if(display) printf("EXP TRAVEL FROM %d, %d TO %d, %d [%d] (%lf -> %lf)\n", last_x, last_y, cc_containers[r]->_w, cc_containers[r]->_l, r, duration, y);
             }
-            duration = ((cc_containers[r]->_l +1) * TRAVEL_TIME) + CONTROL_TIME;
+            duration = ((cc_containers[r]->_w +1) * TRAVEL_TIME) + (2*CONTROL_TIME);
             y += duration;
-            if(display) printf("EXP TRAVEL %d (%lf -> %lf)\n",  cc_containers[r]->_l, duration, y);
+            if(display) printf("EXP TRAVEL %d (%lf -> %lf)\n",  cc_containers[r]->_w, duration, y);
             last_x = -1;
             last_y = -1;
         }
+        //Finish
+        
     }
     return y;
 }
@@ -337,7 +341,7 @@ void uninit() {
 }
 
 int main(int argc, char** argv) {
-//    int malloc_size = init(argv[1]);
+//    char* file_name = init(argv[1]);
     char* file_name = "./data/example_data_2.txt";
     int malloc_size = init(file_name);
     
