@@ -4,6 +4,7 @@
     <df root="." name="0">
       <df name="data">
         <in>example_data.txt</in>
+        <in>example_data_2.txt</in>
       </df>
       <df name="test">
         <in>test_poon_v2.cpp</in>
@@ -55,6 +56,8 @@
         </preBuild>
       </makefileType>
       <item path="data/example_data.txt" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="data/example_data_2.txt" ex="false" tool="3" flavor2="0">
       </item>
       <item path="test/test_poon_v2.cpp" ex="false" tool="1" flavor2="8">
         <ccTool flags="0">

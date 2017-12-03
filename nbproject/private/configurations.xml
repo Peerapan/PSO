@@ -6,6 +6,7 @@
       </df>
       <df name="data">
         <in>example_data.txt</in>
+        <in>example_data_2.txt</in>
       </df>
       <df name="src">
         <in>function.h</in>

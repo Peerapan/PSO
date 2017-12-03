@@ -15,7 +15,12 @@
 
 #include "function.h"
 
+//#define DEBUG
+
 #define WEIGHT 1000
+
+#define TRAVEL_TIME 2
+#define CONTROL_TIME 10
 
 struct dat{
     int _h;
@@ -34,7 +39,6 @@ int W, H, L;
 int imp_ss, imp_ls;
 std::set<int> exp_ss;
 std::set<int> exp_ls;
-std::set<int> res;
 
 std::map<int, dat*> cc_containers;
 std::map<int, dat*> areas;
@@ -45,42 +49,47 @@ int* lower;
 int* start_bit;
 int* bitnum;
 
-int res_steps;
 int imp_ss_steps;
 int exp_ss_steps;
-int res_bits;
+int max_ss_steps;
+int total_ss_steps;
 int ss_bits;
+int area_size;
 
-std::vector<int> pool;
+std::vector<int> area_pool;
+std::vector<int> imp_pool;
+std::vector<int> exp_pool;
 
 void reset(){
 
 }
 
-void init_res_pool(){
+#ifdef ENABLE_RES
+std::set<int> res;
+int res_steps;
+int res_bits;
+void init_res_pool(std::set<int>& res_set){
     for(int i=0;i<W;i++){
         for(int j=0;j<L;j++){
             int k = table[i][j].size()-1;
-            if(k > 0 && res.find(table[i][j][k]) != res.end()){
+            if(k >= 0 && res_set.find(table[i][j][k]) != res_set.end()){
                 pool.push_back( table[i][j][k] );
             }
         }
     }
 }
+#endif
 
-void init_exp_pool(){
-    for(int i=0;i<W;i++){
-        for(int j=0;j<L;j++){
-            int k = table[i][j].size()-1;
-            if(k > 0 && exp_ss.find(table[i][j][k]) != res.end()){
-                pool.push_back( table[i][j][k] );
-            }
-        }
+void copy_map(std::map<int, dat* >& src, std::map<int, dat* >& des){
+    for(auto& it: src){
+        int i = it.first;
+        dat* _a = new dat(it.second->_h, it.second->_w, it.second->_l);
+        des.insert(std::make_pair(i, _a));
     }
 }
 
 int adjust(int curr, int max_curr, int max_n){
-    return (curr / max_curr ) * max_n;
+    return (curr * max_n ) / max_curr;
 }
 
 int pop_pool(std::vector<int>& pool, int idx){
@@ -93,9 +102,12 @@ int pop_pool(std::vector<int>& pool, int idx){
 double fx_function_solve(int x_size, char* x, bool display) {
     double y = 0;
     reset();
-    init_res_pool();
     int start = 0;
     int all = W*L;
+    int last_x = -1;
+    int last_y = -1;
+#ifdef ENABLE_RES
+    init_pool(res);
     int res_bit = decimal_2_binary_size(res_steps);
     int all_bit = decimal_2_binary_size(all);
     for(int i=0; i<res_steps; i++){
@@ -114,34 +126,115 @@ double fx_function_solve(int x_size, char* x, bool display) {
                 cc_containers[r]->_h, cc_containers[r]->_w, cc_containers[r]->_l,
                 areas[des]->_h , areas[des]->_w, areas[des]->_l);
         }
-        y+= abs(cc_containers[r]->_l - areas[des]->_l);
-        //adjust
-//        table[areas[des]->_w][areas[des]->_l].push_back(idx_r);
-//        table[cc_containers[r]->_w][cc_containers[r]->_l].pop_back();
-//        cc_containers[r]->_h = areas[des]->_h;
-//        cc_containers[r]->_w = areas[des]->_w;
-//        cc_containers[r]->_l = areas[des]->_l;
-//        areas.erase(des);
+        y += (abs(cc_containers[r]->_l - areas[des]->_l) * 2);
     }
     pool.clear();
-    for(int i=0; i<imp_ss_steps+exp_ss_steps; i++){
-        
+#endif
+    imp_pool.clear();
+    exp_pool.clear();
+    area_pool.clear();
+#ifdef DEBUG
+    printf("IMP_SS: %d\n", imp_ss);
+    printf("EXP_SS: %d\n", exp_ss.size());
+#endif
+    for(int i=0;i<imp_ss; i++){
+        imp_pool.push_back(i);
+        if(display) printf("IMP: %d\n", i);
+    }
+    for(auto& it : exp_ss){
+        exp_pool.push_back(it);
+        if(display) printf("EXP: %d\n", it);
+    }
+    for(auto& it : areas){
+        area_pool.push_back(it.first);
+        if(display) printf("AREA: %d\n", it.first);
+    }
+    start = 0;
+    int front_bit = decimal_2_binary_size(max_ss_steps);
+    int last_bit = decimal_2_binary_size(all);
+    int front_num = (int)pow(2,front_bit);
+    int last_num = (int)pow(2,last_bit);
+    int total_ss_steps = imp_ss_steps + exp_ss_steps;
+    for(int i=0; i<total_ss_steps; i++){
+        int it, area_it;
+        if(display){
+            for(int i=start; i<start+1+front_bit+last_bit; i++){
+                printf("%d",x[i]);
+            }
+            printf("\n");
+        }
+        char opd = x[start++];
+        it = binary_2_decimal(front_bit, x+start);
+        start += front_bit;
+        area_it = binary_2_decimal(last_bit, x+start);
+        start += last_bit;
+        if(display) printf("It:%d, area_it: %d, all: %d, areas.size(): %d\n", it, area_it, all, area_pool.size());
+        if( opd == 0 || exp_pool.empty() ){
+            //! IMPORT
+            int idx_a = adjust(area_it,last_num,area_pool.size()-1);
+            int a = pop_pool(area_pool, idx_a);
+            int _x = areas[a]->_h;
+            int _y = areas[a]->_w;
+            int _z = areas[a]->_l;
+            int idx_r = adjust(it, front_num,imp_pool.size()-1);
+            int r = pop_pool(imp_pool, idx_r);
+#ifdef DEBUG
+            printf("IMP %d to ( %d, %d, %d )\n",r, areas[des]->_h , areas[des]->_w, areas[des]->_l);
+#endif
+            double duration = 0;
+            if(last_x != -1){
+                duration = ((last_x + 1) * TRAVEL_TIME);
+                y += duration;
+                if(display) printf("IMP TRAVEL BACK FROM %d (%lf -> %lf)\n", last_x, duration, y);
+                last_x = -1;
+                last_y = -1;
+            }
+            duration = ((areas[a]->_l +1) * TRAVEL_TIME) + CONTROL_TIME;
+            y += duration;
+            if(display) printf("IMP TRAVEL TO %d (%lf -> %lf)\n",  areas[a]->_l, duration, y);
+            last_x = areas[a]->_w;
+            last_y = areas[a]->_l;
+        }
+        else{
+            //! EXPORT
+            int idx_r = adjust(it, front_num,exp_pool.size()-1);
+            int r = pop_pool(exp_pool, idx_r);
+ #ifdef DEBUG
+            printf("EXP %d( %d, %d, %d ) to SS\n",r ,
+                cc_containers[r]->_h, cc_containers[r]->_w, cc_containers[r]->_l);
+#endif
+            double duration = 0;
+            if(last_x != -1){
+                duration = ((abs(cc_containers[r]->_l - last_x) + abs(cc_containers[r]->_w - last_y)) * TRAVEL_TIME);
+                y += duration;
+                if(display) printf("EXP TRAVEL FROM %d, %d TO %d, %d (%lf -> %lf)\n", cc_containers[r]->_l, cc_containers[r]->_w, last_x, last_y, duration, y);
+            }
+            duration = ((cc_containers[r]->_l +1) * TRAVEL_TIME) + CONTROL_TIME;
+            y += duration;
+            if(display) printf("EXP TRAVEL %d (%lf -> %lf)\n",  cc_containers[r]->_l, duration, y);
+            last_x = -1;
+            last_y = -1;
+        }
     }
     return y;
 }
 
 int calculate_malloc_size() {
     int sbit = 0;
+    int all = W*L;
+#ifdef ENABLE_RES
     res_steps = res.size();
-    res_bits = (decimal_2_binary_size(res_steps) + decimal_2_binary_size(W*L) * res_steps);
+    res_bits = (decimal_2_binary_size(res_steps) + decimal_2_binary_size(all) * res_steps);
     printf("RES BITS: %d\n", res_bits);
+    sbit += res_bits;
+#endif
     imp_ss_steps = imp_ss;
     exp_ss_steps = exp_ss.size();
-    int max_ss_steps = std::max(imp_ss_steps, exp_ss_steps);
-    int total_ss_steps = imp_ss_steps + exp_ss_steps;
-    ss_bits = (1 + decimal_2_binary_size(total_ss_steps) + decimal_2_binary_size(W*L)) * (total_ss_steps);
-    printf("SS BITS: %d\n", ss_bits);
-    sbit = res_bits + ss_bits;
+    max_ss_steps = std::max(imp_ss_steps, exp_ss_steps);
+    total_ss_steps = imp_ss_steps + exp_ss_steps;
+    ss_bits = (1 + decimal_2_binary_size(max_ss_steps) + decimal_2_binary_size(all)) * (total_ss_steps);
+//    printf("SS BITS: (1 + %d + %d) * %d -> %d\n",decimal_2_binary_size(max_ss_steps), decimal_2_binary_size(all), total_ss_steps, ss_bits);
+    sbit += ss_bits;
     return sbit;
 }
 
@@ -151,50 +244,63 @@ void read_data(const char* file) {
     if (ptr) {
         int n;
         int x, y, z;
+        //! Read H W L
         fscanf(ptr, "%d %d %d", &H, &W, &L);
         
-        //! malloc table
         table.resize(W);
         for(int i=0;i<W;i++){
             table[i].resize(L);
         }
         
+        //! Read Containers
         fscanf(ptr, "%d", &n);
         for(int i=0; i<n; i++){
             fscanf(ptr, "%d %d %d", &x, &y, &z);
             dat* _a = new dat(x, y, z);
             cc_containers.insert(std::make_pair(i, _a));
         }
+        //! Read Areas
         fscanf(ptr, "%d", &n);
         for(int i=0; i<n; i++){
             fscanf(ptr, "%d %d %d", &x, &y, &z);
             dat* _a = new dat(x, y, z);
             areas.insert(std::make_pair(i, _a));
         }
+        //! Number of IMP SS
         fscanf(ptr, "%d", &imp_ss);
-//        fscanf(ptr, "%d", &imp_ls);
+#ifdef ENABLE_LS
+        //! Number of IMP LS
+        fscanf(ptr, "%d", &imp_ls);
+#endif
+        //! Number of EXP SS
         fscanf(ptr, "%d", &n);
         int t;
         for(int i=0; i<n; i++){
             fscanf(ptr, "%d", &t);
             exp_ss.insert(t);
         }
-//        fscanf(ptr, "%d", &n);
-//        for(int i=0; i<n; i++){
-//            fscanf(ptr, "%d", &t);
-//            exp_ss.push_back(t);
-//        }
+#ifdef ENABLE_LS
+        //! Number of EXP LS
+        fscanf(ptr, "%d", &n);
+        for(int i=0; i<n; i++){
+            fscanf(ptr, "%d", &t);
+            exp_ls.push_back(t);
+        }
+#endif
     }
-//    for(auto& it : containers){
-//        printf("%d %d %d\n", it->_h, it->_w, it->_l);
-//    }
+#ifdef DEBUG
+    for(auto& it : cc_containers){
+        printf("%d %d %d\n", it.second->_h, it.second->_w, it.second->_l);
+    }
+#endif
     fclose(ptr);
 }
 
 void analyze(){
     std::vector<std::pair<int, dat*> > pairs;
-    for (auto itr = cc_containers.begin(); itr != cc_containers.end(); ++itr)
+    for (auto itr = cc_containers.begin(); itr != cc_containers.end(); ++itr){
         pairs.push_back(*itr);
+    }
     std::sort(pairs.begin(), pairs.end(), [=](std::pair<int, dat*>& a, std::pair<int, dat*>& b)
     {
         return a.second->_h < b.second->_h;
@@ -203,6 +309,7 @@ void analyze(){
     for(auto& it : pairs){
         table[it.second->_w][it.second->_l].push_back(it.first);
     } 
+#ifdef ENABLE_RES
     for(int i=0;i<W;i++){
         for(int j=0;j<L;j++){
             for(int k=0;k<table[i][j].size();k++){
@@ -215,10 +322,7 @@ void analyze(){
             }
         }
     }
-    //For Debug
-    for(auto& it: res){
-        std::cout << it << std::endl;
-    }
+#endif
 }
 
 int init(char*& input) {
@@ -234,7 +338,7 @@ void uninit() {
 
 int main(int argc, char** argv) {
 //    int malloc_size = init(argv[1]);
-    char* file_name = "./data/example_data.txt";
+    char* file_name = "./data/example_data_2.txt";
     int malloc_size = init(file_name);
     
     printf("BIT SIZE: %d\n", malloc_size);
@@ -354,7 +458,8 @@ int main(int argc, char** argv) {
         //		printf("%lf %lf\n", Gbest1, Pbest1);
     }
     printf("%s : %lf\n", file_name, Gbest1);
-    fx_function_solve(malloc_size, xgbest, true);
+    double best_y = fx_function_solve(malloc_size, xgbest, true);
+    printf("Best Result: %lf", best_y);
 
     for (int i = 0; i < popsize; i++) {
         free(x[i]);
