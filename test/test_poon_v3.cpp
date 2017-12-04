@@ -185,7 +185,7 @@ double fx_function_solve(int x_size, char* x, bool display) {
             if(last_x != -1){
                 duration = ((last_x + 1) * TRAVEL_TIME);
                 y += duration;
-                if(display) printf("IMP TRAVEL BACK FROM %d (%lf -> %lf)\n", last_x, duration, y);
+                if(display) printf("IMP TRAVEL BACK FROM %d, %d (%lf -> %lf)\n", last_x, last_y, duration, y);
                 last_x = -1;
                 last_y = -1;
             }
@@ -204,22 +204,21 @@ double fx_function_solve(int x_size, char* x, bool display) {
                 cc_containers[r]->_h, cc_containers[r]->_w, cc_containers[r]->_l);
 #endif
             double duration = 0;
-            if(last_x != -1){
-//                duration = ((abs(cc_containers[r]->_w - last_x) + abs(cc_containers[r]->_l - last_y)) * TRAVEL_TIME);
-                duration = (abs(cc_containers[r]->_w - last_x) * TRAVEL_TIME);
-                y += duration;
-//                if(display) printf("EXP TRAVEL FROM %d, %d TO %d, %d [%d] (%lf -> %lf)\n", last_x, last_y, cc_containers[r]->_w, cc_containers[r]->_l, r, duration, y);
-                if(display) printf("EXP TRAVEL FROM %d, %d TO %d, %d [%d] (%lf -> %lf)\n", last_x, last_y, cc_containers[r]->_w, cc_containers[r]->_l, r, duration, y);
-            }
+            duration = (abs(cc_containers[r]->_w - last_x) * TRAVEL_TIME);
+            y += duration;
+            if(display) printf("EXP TRAVEL FROM %d, %d TO %d, %d [%d] (%lf -> %lf)\n", last_x, last_y, cc_containers[r]->_w, cc_containers[r]->_l, r, duration, y);
             duration = ((cc_containers[r]->_w +1) * TRAVEL_TIME) + (2*CONTROL_TIME);
             y += duration;
             if(display) printf("EXP TRAVEL %d (%lf -> %lf)\n",  cc_containers[r]->_w, duration, y);
             last_x = -1;
             last_y = -1;
         }
-        //Finish
-        
     }
+	if( last_x != -1 && last_y != -1 ){
+		double duration = (last_x + 1) * TRAVEL_TIME;
+		y += duration;
+		if(display) printf("TRAVEL BACK %d, %d (%lf -> %lf)\n",  last_x, last_y, duration, y);
+	}
     return y;
 }
 
@@ -341,8 +340,8 @@ void uninit() {
 }
 
 int main(int argc, char** argv) {
-//    char* file_name = init(argv[1]);
-    char* file_name = "./data/example_data_2.txt";
+    char* file_name = argv[1];
+//    char* file_name = "./data/example_data_small_2.txt";
     int malloc_size = init(file_name);
     
     printf("BIT SIZE: %d\n", malloc_size);
