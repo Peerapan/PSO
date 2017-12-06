@@ -37,6 +37,7 @@ struct dat{
 int W, H, L;
 
 int imp_ss, imp_ls;
+std::set<int> res;
 std::set<int> exp_ss;
 std::set<int> exp_ls;
 
@@ -49,10 +50,12 @@ int* lower;
 int* start_bit;
 int* bitnum;
 
+int res_steps;
 int imp_ss_steps;
 int exp_ss_steps;
 int max_ss_steps;
 int total_ss_steps;
+int res_bits;
 int ss_bits;
 int area_size;
 
@@ -64,11 +67,11 @@ void reset(){
 
 }
 
-#ifdef ENABLE_RES
-std::set<int> res;
-int res_steps;
-int res_bits;
-void init_res_pool(std::set<int>& res_set){
+void init(){
+    
+}
+
+void init_res_pool(std::vector<int>& pool, std::set<int>& res_set){
     for(int i=0;i<W;i++){
         for(int j=0;j<L;j++){
             int k = table[i][j].size()-1;
@@ -78,7 +81,6 @@ void init_res_pool(std::set<int>& res_set){
         }
     }
 }
-#endif
 
 void copy_map(std::map<int, dat* >& src, std::map<int, dat* >& des){
     for(auto& it: src){
@@ -90,6 +92,20 @@ void copy_map(std::map<int, dat* >& src, std::map<int, dat* >& des){
 
 int adjust(int curr, int max_curr, int max_n){
     return (curr * max_n ) / max_curr;
+}
+
+int pop_area_pool(std::vector<int>& pool, int idx){
+    int r = pool[idx];
+    pool[idx] = pool[pool.size()-1];
+    pool.pop_back();
+    return r;
+}
+
+int pop_res_pool(std::vector<int>& pool, int idx){
+    int r = pool[idx];
+    pool[idx] = pool[pool.size()-1];
+    pool.pop_back();
+    return r;
 }
 
 int pop_pool(std::vector<int>& pool, int idx){
@@ -106,18 +122,22 @@ double fx_function_solve(int x_size, char* x, bool display) {
     int all = W*L;
     int last_x = -1;
     int last_y = -1;
-#ifdef ENABLE_RES
-    init_pool(res);
+    
+    std::vector<int> res_pool;
+    init_res_pool(res_pool, res);
     int res_bit = decimal_2_binary_size(res_steps);
     int all_bit = decimal_2_binary_size(all);
+    int front_num = (int)pow(2,res_bit);
+    int last_num = (int)pow(2,all_bit);
     for(int i=0; i<res_steps; i++){
         int res_it = binary_2_decimal(res_bit, x+start);
         start += res_bit;
         int area_it = binary_2_decimal(all_bit, x+start);
         start += all_bit;
-        int idx_r = adjust(res_it,all-1,pool.size()-1);
-        int r = pop_pool(pool, idx_r);
-        int des = adjust(area_it,all-1,areas.size()-1);
+        int idx_r = adjust(res_it,front_num-1,res_pool.size()-1);
+        int r = pop_res_pool(pool, idx_r);
+        int des = adjust(area_it,last_num-1,areas.size()-1);
+        int r = pop_area_pool(pool, idx_r);
         int _x = areas[des]->_h;
         int _y = areas[des]->_w;
         int _z = areas[des]->_l;
@@ -126,10 +146,11 @@ double fx_function_solve(int x_size, char* x, bool display) {
                 cc_containers[r]->_h, cc_containers[r]->_w, cc_containers[r]->_l,
                 areas[des]->_h , areas[des]->_w, areas[des]->_l);
         }
-        y += (abs(cc_containers[r]->_l - areas[des]->_l) * 2);
+        double duration = ((abs(cc_containers[r]->_l - areas[des]->_l) * TRAVEL_TIME) + (2 * CONTROL_TIME));
+        y += duration;
     }
-    pool.clear();
-#endif
+    res_pool.clear();
+    
     imp_pool.clear();
     exp_pool.clear();
     area_pool.clear();
@@ -171,12 +192,12 @@ double fx_function_solve(int x_size, char* x, bool display) {
         if(display) printf("It:%d, area_it: %d, all: %d, areas.size(): %d\n", it, area_it, all, area_pool.size());
         if( (opd == 0 && !imp_pool.empty()) || exp_pool.empty() ){
             //! IMPORT
-            int idx_a = adjust(area_it,last_num,area_pool.size()-1);
-            int a = pop_pool(area_pool, idx_a);
+            int idx_a = adjust(area_it,last_num-1,area_pool.size()-1);
+            int a = pop_area_pool(area_pool, idx_a);
             int _x = areas[a]->_h;
             int _y = areas[a]->_w;
             int _z = areas[a]->_l;
-            int idx_r = adjust(it, front_num,imp_pool.size()-1);
+            int idx_r = adjust(it, front_num-1,imp_pool.size()-1);
             int r = pop_pool(imp_pool, idx_r);
 #ifdef DEBUG
             printf("IMP %d to ( %d, %d, %d )\n",r, areas[des]->_h , areas[des]->_w, areas[des]->_l);
@@ -197,7 +218,7 @@ double fx_function_solve(int x_size, char* x, bool display) {
         }
         else{
             //! EXPORT
-            int idx_r = adjust(it, front_num,exp_pool.size()-1);
+            int idx_r = adjust(it, front_num-1,exp_pool.size()-1);
             int r = pop_pool(exp_pool, idx_r);
  #ifdef DEBUG
             printf("EXP %d( %d, %d, %d ) to SS\n",r ,
@@ -225,12 +246,10 @@ double fx_function_solve(int x_size, char* x, bool display) {
 int calculate_malloc_size() {
     int sbit = 0;
     int all = W*L;
-#ifdef ENABLE_RES
     res_steps = res.size();
     res_bits = (decimal_2_binary_size(res_steps) + decimal_2_binary_size(all) * res_steps);
-    printf("RES BITS: %d\n", res_bits);
+//    printf("RES BITS: %d\n", res_bits);
     sbit += res_bits;
-#endif
     imp_ss_steps = imp_ss;
     exp_ss_steps = exp_ss.size();
     max_ss_steps = std::max(imp_ss_steps, exp_ss_steps);
