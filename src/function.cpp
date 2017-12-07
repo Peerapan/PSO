@@ -1,3 +1,5 @@
+#include "function.h"
+
 #include <math.h>
 #include <limits>
 
@@ -53,12 +55,6 @@ int binary_2_decimal(int bsize, char* bits){
 	return sum;
 }
 
-double fx_function1(int x_size, char* x){
-	double y = 0;
-	for(int i=0;i<x_size;i++){
-		if(x[i]){
-			y += x[i];
-		}
-	}
-	return y;
+int adjust(int curr, int max_curr, int max_n){
+    return (curr * max_n ) / max_curr;
 }

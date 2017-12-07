@@ -8,11 +8,16 @@
         <in>example_data.txt</in>
         <in>example_data_2.txt</in>
       </df>
-      <df name="src">
+      <df name="include">
         <in>function.h</in>
+        <in>model.h</in>
         <in>particle.h</in>
         <in>pso.h</in>
         <in>swarm.h</in>
+      </df>
+      <df name="src">
+        <in>function.cpp</in>
+        <in>model.cpp</in>
       </df>
       <df name="test">
         <in>test_poon.cpp</in>
