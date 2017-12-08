@@ -145,6 +145,7 @@ void Model::analyze() {
 int Model::calculate_malloc_size() {
     int sbit = 0;
     int all = W*L;
+	
     res_steps = res.size();
     res_bits = (decimal_2_binary_size(res_steps) + decimal_2_binary_size(all)) * res_steps;
 
@@ -154,10 +155,10 @@ int Model::calculate_malloc_size() {
     max_ss_steps = std::max(imp_ss_steps, exp_ss_steps);
     total_ss_steps = imp_ss_steps + exp_ss_steps;
     ss_bits = (1 + decimal_2_binary_size(max_ss_steps) + decimal_2_binary_size(all)) * (total_ss_steps);
-
-    sbit += ss_bits;
-    allocate_size = sbit;
-    return sbit;
+	sbit += ss_bits;
+	
+	allocate_size = sbit;
+	return allocate_size;
 }
 
 Model* Model::clone() {
@@ -182,6 +183,9 @@ Model* Model::clone() {
         dat* _a = new dat(it.second->_h, it.second->_w, it.second->_l);
         m->areas.insert(std::make_pair(i, _a));
     }
+	for (auto& it : this->res) {
+		m->res.insert(it);
+	}
     m->imp_ss = this->imp_ss;
     for (auto& it : this->exp_ss) {
         m->exp_ss.insert(it);
@@ -197,7 +201,7 @@ int Model::pop_area_pool(int idx) {
 	int a = area_pool[idx];
 	if(areas[a]->_h+1 < H){
 		int n = areas.size();
-		areas[n] = new dat(areas[a]->_w, areas[a]->_l, areas[a]->_h+1);
+		areas[n] = new dat(areas[a]->_h+1, areas[a]->_w, areas[a]->_l);
 		area_pool[idx] = area_pool[n];
 	}else{
 		area_pool[idx] = area_pool[area_pool.size() - 1];
@@ -208,9 +212,10 @@ int Model::pop_area_pool(int idx) {
 
 int Model::pop_res_pool(int idx) {
 	int r = res_pool[idx];
-	if (cc_containers[r]->_h-1 >= 0 && res.find(r) != res.end()) {
+	int nt = table[cc_containers[r]->_w][cc_containers[r]->_l][cc_containers[r]->_h-1];
+	if (cc_containers[r]->_h-1 >= 0 && res.find(nt) != res.end()) {
 		int n = cc_containers.size();
-		res_pool[n] = new dat(cc_containers[r]->_w, cc_containers[r]->_l, cc_containers[r]->_h-1);
+		res_pool[n] = nt;
 		res_pool[idx] = res_pool[n];
 	}else{
 		res_pool[idx] = res_pool[res_pool.size() - 1];
@@ -238,6 +243,12 @@ double Model::fx_function_solve(int x_size, char* x, bool display) {
     int front_num = (int) pow(2, res_bit);
     int last_num = (int) pow(2, all_bit);
     for (int i = 0; i < res_steps; i++) {
+		if (display) {
+			for (int j = start; j < start + res_bit + all_bit; j++) {
+				printf("%d", x[j]);
+			}
+			printf("\n");
+		}
         int res_it = binary_2_decimal(res_bit, x + start);
         start += res_bit;
         int area_it = binary_2_decimal(all_bit, x + start);
@@ -245,23 +256,32 @@ double Model::fx_function_solve(int x_size, char* x, bool display) {
         int idx_r = adjust(res_it, front_num - 1, res_pool.size() - 1);
 		int r = pop_res_pool(idx_r);
         int des = adjust(area_it, last_num - 1, area_pool.size() - 1);
-		r = pop_area_pool(idx_r);
-        int _x = areas[des]->_h;
-        int _y = areas[des]->_w;
-        int _z = areas[des]->_l;
-        if (display) {
-        printf("Move %d( %d, %d, %d ) to ( %d, %d, %d )\n",r ,
-        	cc_containers[r]->_h, cc_containers[r]->_w, cc_containers[r]->_l,
-        	areas[des]->_h , areas[des]->_w, areas[des]->_l);
-        }
-		double duration = ((abs(cc_containers[r]->_l - areas[des]->_l) * TRAVEL_TIME) + (2 * CONTROL_TIME));
+		int a = pop_area_pool(des);
+        int _z = cc_containers[des]->_h;
+        int _x = cc_containers[des]->_w;
+        int _y = cc_containers[des]->_l;
+		if (last_x != _x) {
+			double duration = (abs(last_x - _x) * TRAVEL_TIME);
+			y += duration;
+			if (display) printf("MOVE TRAVEL FROM %d, %d TO %d, %d (%lf -> %lf)\n", last_x, last_y, _x, _y, duration, y);
+			last_x = _x;
+			last_y = _y;
+		}
+		double duration = ((abs(cc_containers[r]->_w - areas[des]->_w) * TRAVEL_TIME) + (2 * CONTROL_TIME));
 		y += duration;
+        if (display) {
+			printf("Move %d( %d, %d, %d ) to ( %d, %d, %d ) (%lf->%f)\n",r ,
+				cc_containers[r]->_h, cc_containers[r]->_w, cc_containers[r]->_l,
+				areas[a]->_h , areas[a]->_w, areas[a]->_l,
+				duration, y);
+        }
+		last_x = areas[des]->_w;
+		last_y = areas[des]->_l;
     }
 #ifdef DEBUG
     printf("IMP_SS: %d\n", imp_ss);
     printf("EXP_SS: %d\n", exp_ss.size());
 #endif
-    start = 0;
     int front_bit = decimal_2_binary_size(max_ss_steps);
     int last_bit = decimal_2_binary_size(all);
     front_num = (int) pow(2, front_bit);
@@ -270,8 +290,8 @@ double Model::fx_function_solve(int x_size, char* x, bool display) {
     for (int i = 0; i < total_ss_steps; i++) {
         int it, area_it;
         if (display) {
-            for (int i = start; i < start + 1 + front_bit + last_bit; i++) {
-                printf("%d", x[i]);
+            for (int j = start; j < start + 1 + front_bit + last_bit; j++) {
+                printf("%d", x[j]);
             }
             printf("\n");
         }
