@@ -60,6 +60,11 @@ public:
     Model(const char*& input);
     ~Model();
     Model* clone();
+    
+    int pop_pool(std::vector<int>& pool, int idx);
+    int pop_area_pool(int a);
+    int pop_res_pool(int a);
+    
     double fx_function_solve(int x_size, char* x, bool display);
 
     inline int get_bit_size() const {

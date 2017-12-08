@@ -1,7 +1,8 @@
 #include "function.h"
-#include "model.h"\
+#include "model.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <math.h>
 #include <limits>

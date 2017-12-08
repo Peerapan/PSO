@@ -95,19 +95,9 @@ void Model::load_data(const char* file) {
     fclose(ptr);
 }
 
-void Model::analyze() {
-    std::vector<std::pair<int, dat*> > pairs;
-    for (auto itr = cc_containers.begin(); itr != cc_containers.end(); ++itr) {
-        pairs.push_back(*itr);
-    }
-    std::sort(pairs.begin(), pairs.end(), [ = ](std::pair<int, dat*>& a, std::pair<int, dat*>& b){
-        return a.second->_h < b.second->_h;
-    }
-    );
-    for (auto& it : pairs) {
-        table[it.second->_w][it.second->_l].push_back(it.first);
-    }
-    /*for (int i = 0; i < W; i++) {
+/*
+void find_res(){
+	for (int i = 0; i < W; i++) {
         for (int j = 0; j < L; j++) {
             for (int k = 0; k < table[i][j].size(); k++) {
                 if (exp_ss.find(table[i][j][k]) != exp_ss.end()) {
@@ -118,7 +108,30 @@ void Model::analyze() {
                 }
             }
         }
-    }*/
+    }
+}
+*/
+
+void Model::analyze() {
+    std::vector<std::pair<int, dat*> > pairs;
+    for (auto itr = cc_containers.begin(); itr != cc_containers.end(); ++itr) {
+        pairs.push_back(*itr);
+    }
+    std::sort(pairs.begin(), pairs.end(), [ = ](std::pair<int, dat*>& a, std::pair<int, dat*>& b){
+        return a.second->_h < b.second->_h;
+    });
+    for (auto& it : pairs) {
+        table[it.second->_w][it.second->_l].push_back(it.first);
+    }
+    for (int i = 0; i < imp_ss; i++) {
+        imp_pool.push_back(i);
+    }
+    for (auto& it : exp_ss) {
+        exp_pool.push_back(it);
+    }
+    for (auto& it : areas) {
+        area_pool.push_back(it.first);
+    }
     for (int i = 0; i < W; i++) {
         for (int j = 0; j < L; j++) {
             int k = table[i][j].size() - 1;
@@ -133,7 +146,7 @@ int Model::calculate_malloc_size() {
     int sbit = 0;
     int all = W*L;
     res_steps = res.size();
-    res_bits = (decimal_2_binary_size(res_steps) + decimal_2_binary_size(all) * res_steps);
+    res_bits = (decimal_2_binary_size(res_steps) + decimal_2_binary_size(all)) * res_steps;
 
     sbit += res_bits;
     imp_ss_steps = imp_ss;
@@ -176,23 +189,37 @@ Model* Model::clone() {
 
     m->analyze();
     m->calculate_malloc_size();
+    
+    return m;
 }
 
-int pop_area_pool(std::vector<int>& pool, int idx) {
-    int r = pool[idx];
-    pool[idx] = pool[pool.size() - 1];
-    pool.pop_back();
-    return r;
+int Model::pop_area_pool(int idx) {
+	int a = area_pool[idx];
+	if(areas[a]->_h+1 < H){
+		int n = areas.size();
+		areas[n] = new dat(areas[a]->_w, areas[a]->_l, areas[a]->_h+1);
+		area_pool[idx] = area_pool[n];
+	}else{
+		area_pool[idx] = area_pool[area_pool.size() - 1];
+    	area_pool.pop_back();
+	}
+	return a;
 }
 
-int pop_res_pool(std::vector<int>& pool, int idx) {
-    int r = pool[idx];
-    pool[idx] = pool[pool.size() - 1];
-    pool.pop_back();
-    return r;
+int Model::pop_res_pool(int idx) {
+	int r = res_pool[idx];
+	if (cc_containers[r]->_h-1 >= 0 && res.find(r) != res.end()) {
+		int n = cc_containers.size();
+		res_pool[n] = new dat(cc_containers[r]->_w, cc_containers[r]->_l, cc_containers[r]->_h-1);
+		res_pool[idx] = res_pool[n];
+	}else{
+		res_pool[idx] = res_pool[res_pool.size() - 1];
+    	res_pool.pop_back();
+	}
+	return r;
 }
 
-int pop_pool(std::vector<int>& pool, int idx) {
+int Model::pop_pool(std::vector<int>& pool, int idx) {
     int r = pool[idx];
     pool[idx] = pool[pool.size() - 1];
     pool.pop_back();
@@ -216,41 +243,24 @@ double Model::fx_function_solve(int x_size, char* x, bool display) {
         int area_it = binary_2_decimal(all_bit, x + start);
         start += all_bit;
         int idx_r = adjust(res_it, front_num - 1, res_pool.size() - 1);
-        //        int r = pop_res_pool(pool, idx_r);
-        int des = adjust(area_it, last_num - 1, areas.size() - 1);
-        //        int r = pop_area_pool(pool, idx_r);
+		int r = pop_res_pool(idx_r);
+        int des = adjust(area_it, last_num - 1, area_pool.size() - 1);
+		r = pop_area_pool(idx_r);
         int _x = areas[des]->_h;
         int _y = areas[des]->_w;
         int _z = areas[des]->_l;
         if (display) {
-            //            printf("Move %d( %d, %d, %d ) to ( %d, %d, %d )\n",r ,
-            //                cc_containers[r]->_h, cc_containers[r]->_w, cc_containers[r]->_l,
-            //                areas[des]->_h , areas[des]->_w, areas[des]->_l);
+        printf("Move %d( %d, %d, %d ) to ( %d, %d, %d )\n",r ,
+        	cc_containers[r]->_h, cc_containers[r]->_w, cc_containers[r]->_l,
+        	areas[des]->_h , areas[des]->_w, areas[des]->_l);
         }
-        //        double duration = ((abs(cc_containers[r]->_l - areas[des]->_l) * TRAVEL_TIME) + (2 * CONTROL_TIME));
-        //        y += duration;
+		double duration = ((abs(cc_containers[r]->_l - areas[des]->_l) * TRAVEL_TIME) + (2 * CONTROL_TIME));
+		y += duration;
     }
-    res_pool.clear();
-
-    imp_pool.clear();
-    exp_pool.clear();
-    area_pool.clear();
 #ifdef DEBUG
     printf("IMP_SS: %d\n", imp_ss);
     printf("EXP_SS: %d\n", exp_ss.size());
 #endif
-    for (int i = 0; i < imp_ss; i++) {
-        imp_pool.push_back(i);
-        if (display) printf("IMP: %d\n", i);
-    }
-    for (auto& it : exp_ss) {
-        exp_pool.push_back(it);
-        if (display) printf("EXP: %d\n", it);
-    }
-    for (auto& it : areas) {
-        area_pool.push_back(it.first);
-        if (display) printf("AREA: %d\n", it.first);
-    }
     start = 0;
     int front_bit = decimal_2_binary_size(max_ss_steps);
     int last_bit = decimal_2_binary_size(all);
@@ -270,12 +280,10 @@ double Model::fx_function_solve(int x_size, char* x, bool display) {
         start += front_bit;
         area_it = binary_2_decimal(last_bit, x + start);
         start += last_bit;
-        if (display)
-            printf("It:%d, area_it: %d, all: %d, areas.size(): %d\n", it, area_it, all, area_pool.size());
         if ((opd == 0 && !imp_pool.empty()) || exp_pool.empty()) {
             //! IMPORT
             int idx_a = adjust(area_it, last_num - 1, area_pool.size() - 1);
-            int a = pop_area_pool(area_pool, idx_a);
+            int a = pop_area_pool(idx_a);
             int _x = areas[a]->_h;
             int _y = areas[a]->_w;
             int _z = areas[a]->_l;
