@@ -4,8 +4,8 @@ CXXFLAGS := -g -std=c++14
 
 OBJECTS	:= build/function.o build/model.o build/test_poon.o
 
-test_poon: $(OBJECTS)
-	$(CXX) $(OBJECTS) -o test_poon
+build/test_poon: $(OBJECTS)
+	$(CXX) $(OBJECTS) -o build/test_poon
 
 build/test_poon.o: test/test_poon_v3.cpp
 	$(CXX) $(CXXFLAGS) -I./include -c  test/test_poon_v3.cpp -o build/test_poon.o
