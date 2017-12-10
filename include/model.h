@@ -55,6 +55,8 @@ class Model {
     void analyze();
     int calculate_malloc_size();
 
+    void find_res();
+    
 public:
     Model();
     Model(const char*& input);

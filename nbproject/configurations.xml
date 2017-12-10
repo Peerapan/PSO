@@ -34,7 +34,8 @@
       </toolsSet>
       <flagsDictionary>
         <element flagsID="0" commonFlags="-O2 -std=c++11"/>
-        <element flagsID="1" commonFlags="-std=c++14"/>
+        <element flagsID="1"
+                 commonFlags="-mtune=generic -march=x86-64 -std=c++14 -fstack-protector-strong"/>
       </flagsDictionary>
       <codeAssistance>
       </codeAssistance>
@@ -50,18 +51,21 @@
           <preBuildCommand></preBuildCommand>
         </preBuild>
       </makefileType>
-      <folder path="0/src">
-        <ccTool>
+      <item path="src/function.cpp" ex="false" tool="1" flavor2="11">
+        <ccTool flags="1">
           <incDir>
-            <pElem>include</pElem>
+            <pElem>src</pElem>
             <pElem>.</pElem>
           </incDir>
         </ccTool>
-      </folder>
-      <item path="src/function.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="src/model.cpp" ex="false" tool="1" flavor2="11">
         <ccTool flags="1">
+          <incDir>
+            <pElem>include</pElem>
+            <pElem>src</pElem>
+            <pElem>.</pElem>
+          </incDir>
         </ccTool>
       </item>
       <item path="test/test_poon_v2.cpp" ex="false" tool="1" flavor2="8">
@@ -76,6 +80,7 @@
         <ccTool flags="1">
           <incDir>
             <pElem>include</pElem>
+            <pElem>test</pElem>
             <pElem>.</pElem>
           </incDir>
         </ccTool>

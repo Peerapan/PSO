@@ -95,23 +95,6 @@ void Model::load_data(const char* file) {
     fclose(ptr);
 }
 
-/*
-void find_res(){
-	for (int i = 0; i < W; i++) {
-        for (int j = 0; j < L; j++) {
-            for (int k = 0; k < table[i][j].size(); k++) {
-                if (exp_ss.find(table[i][j][k]) != exp_ss.end()) {
-                    for (int l = k + 1; l < table[i][j].size(); l++) {
-                        res.insert(table[i][j][l]);
-                    }
-                    break;
-                }
-            }
-        }
-    }
-}
-*/
-
 void Model::analyze() {
     std::vector<std::pair<int, dat*> > pairs;
     for (auto itr = cc_containers.begin(); itr != cc_containers.end(); ++itr) {
@@ -145,7 +128,7 @@ void Model::analyze() {
 int Model::calculate_malloc_size() {
     int sbit = 0;
     int all = W*L;
-	
+
     res_steps = res.size();
     res_bits = (decimal_2_binary_size(res_steps) + decimal_2_binary_size(all)) * res_steps;
 
@@ -155,10 +138,10 @@ int Model::calculate_malloc_size() {
     max_ss_steps = std::max(imp_ss_steps, exp_ss_steps);
     total_ss_steps = imp_ss_steps + exp_ss_steps;
     ss_bits = (1 + decimal_2_binary_size(max_ss_steps) + decimal_2_binary_size(all)) * (total_ss_steps);
-	sbit += ss_bits;
-	
-	allocate_size = sbit;
-	return allocate_size;
+    sbit += ss_bits;
+
+    allocate_size = sbit;
+    return allocate_size;
 }
 
 Model* Model::clone() {
@@ -183,9 +166,9 @@ Model* Model::clone() {
         dat* _a = new dat(it.second->_h, it.second->_w, it.second->_l);
         m->areas.insert(std::make_pair(i, _a));
     }
-	for (auto& it : this->res) {
-		m->res.insert(it);
-	}
+    for (auto& it : this->res) {
+        m->res.insert(it);
+    }
     m->imp_ss = this->imp_ss;
     for (auto& it : this->exp_ss) {
         m->exp_ss.insert(it);
@@ -193,35 +176,34 @@ Model* Model::clone() {
 
     m->analyze();
     m->calculate_malloc_size();
-    
+
     return m;
 }
 
 int Model::pop_area_pool(int idx) {
-	int a = area_pool[idx];
-	if(areas[a]->_h+1 < H){
-		int n = areas.size();
-		areas[n] = new dat(areas[a]->_h+1, areas[a]->_w, areas[a]->_l);
-		area_pool[idx] = area_pool[n];
-	}else{
-		area_pool[idx] = area_pool[area_pool.size() - 1];
-    	area_pool.pop_back();
-	}
-	return a;
+    int a = area_pool[idx];
+    if (areas[a]->_h + 1 < H) {
+        int n = areas.size();
+        areas[n] = new dat(areas[a]->_h + 1, areas[a]->_w, areas[a]->_l);
+        area_pool[idx] = n;
+    } else {
+        area_pool[idx] = area_pool[area_pool.size() - 1];
+        area_pool.pop_back();
+    }
+    return a;
 }
 
 int Model::pop_res_pool(int idx) {
-	int r = res_pool[idx];
-	int nt = table[cc_containers[r]->_w][cc_containers[r]->_l][cc_containers[r]->_h-1];
-	if (cc_containers[r]->_h-1 >= 0 && res.find(nt) != res.end()) {
-		int n = cc_containers.size();
-		res_pool[n] = nt;
-		res_pool[idx] = res_pool[n];
-	}else{
-		res_pool[idx] = res_pool[res_pool.size() - 1];
-    	res_pool.pop_back();
-	}
-	return r;
+    int r = res_pool[idx];
+    int nt = table[cc_containers[r]->_w][cc_containers[r]->_l][cc_containers[r]->_h - 1];
+    if (cc_containers[r]->_h - 1 >= 0 && res.find(nt) != res.end()) {
+        int n = cc_containers.size();
+        res_pool[idx] = nt;
+    } else {
+        res_pool[idx] = res_pool[res_pool.size() - 1];
+        res_pool.pop_back();
+    }
+    return r;
 }
 
 int Model::pop_pool(std::vector<int>& pool, int idx) {
@@ -229,6 +211,21 @@ int Model::pop_pool(std::vector<int>& pool, int idx) {
     pool[idx] = pool[pool.size() - 1];
     pool.pop_back();
     return r;
+}
+
+void Model::find_res() {
+    for (int i = 0; i < W; i++) {
+        for (int j = 0; j < L; j++) {
+            for (int k = 0; k < table[i][j].size(); k++) {
+                if (exp_ss.find(table[i][j][k]) != exp_ss.end()) {
+                    for (int l = k + 1; l < table[i][j].size(); l++) {
+                        res.insert(table[i][j][l]);
+                    }
+                    break;
+                }
+            }
+        }
+    }
 }
 
 double Model::fx_function_solve(int x_size, char* x, bool display) {
@@ -243,40 +240,39 @@ double Model::fx_function_solve(int x_size, char* x, bool display) {
     int front_num = (int) pow(2, res_bit);
     int last_num = (int) pow(2, all_bit);
     for (int i = 0; i < res_steps; i++) {
-		if (display) {
-			for (int j = start; j < start + res_bit + all_bit; j++) {
-				printf("%d", x[j]);
-			}
-			printf("\n");
-		}
+        if (display) {
+            for (int j = start; j < start + res_bit + all_bit; j++) {
+                printf("%d", x[j]);
+            }
+            printf("\n");
+        }
         int res_it = binary_2_decimal(res_bit, x + start);
         start += res_bit;
         int area_it = binary_2_decimal(all_bit, x + start);
         start += all_bit;
         int idx_r = adjust(res_it, front_num - 1, res_pool.size() - 1);
-		int r = pop_res_pool(idx_r);
+        int r = pop_res_pool(idx_r);
         int des = adjust(area_it, last_num - 1, area_pool.size() - 1);
-		int a = pop_area_pool(des);
-        int _z = cc_containers[des]->_h;
-        int _x = cc_containers[des]->_w;
-        int _y = cc_containers[des]->_l;
-		if (last_x != _x) {
-			double duration = (abs(last_x - _x) * TRAVEL_TIME);
-			y += duration;
-			if (display) printf("MOVE TRAVEL FROM %d, %d TO %d, %d (%lf -> %lf)\n", last_x, last_y, _x, _y, duration, y);
-			last_x = _x;
-			last_y = _y;
-		}
-		double duration = ((abs(cc_containers[r]->_w - areas[des]->_w) * TRAVEL_TIME) + (2 * CONTROL_TIME));
-		y += duration;
-        if (display) {
-			printf("Move %d( %d, %d, %d ) to ( %d, %d, %d ) (%lf->%f)\n",r ,
-				cc_containers[r]->_h, cc_containers[r]->_w, cc_containers[r]->_l,
-				areas[a]->_h , areas[a]->_w, areas[a]->_l,
-				duration, y);
+        int a = pop_area_pool(des);
+        int _x = cc_containers[r]->_w;
+        int _y = cc_containers[r]->_l;
+        if (last_x != _x) {
+            double duration = (abs(last_x - _x) * TRAVEL_TIME);
+            y += duration;
+            if (display) printf("MOVE TRAVEL FROM %d, %d TO %d, %d (%lf -> %lf)\n", last_x, last_y, _x, _y, duration, y);
+            last_x = _x;
+            last_y = _y;
         }
-		last_x = areas[des]->_w;
-		last_y = areas[des]->_l;
+        double duration = ((abs(cc_containers[r]->_w - areas[a]->_w) * TRAVEL_TIME) + (2 * CONTROL_TIME));
+        y += duration;
+        if (display) {
+            printf("Move %d( %d, %d, %d ) to ( %d, %d, %d ) (%lf->%f)\n", r,
+                    cc_containers[r]->_h, cc_containers[r]->_w, cc_containers[r]->_l,
+                    areas[a]->_h, areas[a]->_w, areas[a]->_l,
+                    duration, y);
+        }
+        last_x = areas[a]->_w;
+        last_y = areas[a]->_l;
     }
 #ifdef DEBUG
     printf("IMP_SS: %d\n", imp_ss);
@@ -304,9 +300,6 @@ double Model::fx_function_solve(int x_size, char* x, bool display) {
             //! IMPORT
             int idx_a = adjust(area_it, last_num - 1, area_pool.size() - 1);
             int a = pop_area_pool(idx_a);
-            int _x = areas[a]->_h;
-            int _y = areas[a]->_w;
-            int _z = areas[a]->_l;
             int idx_r = adjust(it, front_num - 1, imp_pool.size() - 1);
             int r = pop_pool(imp_pool, idx_r);
 #ifdef DEBUG

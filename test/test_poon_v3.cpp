@@ -146,7 +146,7 @@ int main(int argc, const char** argv) {
         delete m;
     }
     
-    printf("Best Result: %lf", best_y);
+    printf("Best Result: %lf\n", best_y);
 
     for (int i = 0; i < popsize; i++) {
         free(x[i]);

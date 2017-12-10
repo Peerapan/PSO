@@ -5,8 +5,6 @@
       <df name="build">
       </df>
       <df name="data">
-        <in>example_data.txt</in>
-        <in>example_data_2.txt</in>
       </df>
       <df name="include">
         <in>function.h</in>
