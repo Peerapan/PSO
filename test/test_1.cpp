@@ -18,25 +18,6 @@ int* lower;
 int* start_bit;
 int* bitnum;
 
-int decimal_2_binary_size(int input){
-	int i = 1;
-	while( input > 1 ){
-		input >>= 1;
-		i++;
-	}
-	return i;
-}
-
-int binary_2_decimal(int bsize, char* bits){
-	int j = 1;
-	int sum = 0;
-	for(int i=0;i<bsize;i++){
-		sum += (j * bits[i]);
-		j <<= 1;
-	}
-	return sum;
-}
-
 double fx_function_solve(int x_size, char* x, bool display){
 	int max_size = ls+ss;
 	int mss = ss;
