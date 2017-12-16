@@ -14,12 +14,15 @@
 int main(int argc, const char** argv) {
     const char* file_name = argv[1];
     
+    std::map<std::string, double> configs;
+    read_configs(configs);
+    
     Model* master = new Model(file_name);
     int malloc_size = master->get_bit_size();
 
     double Pbest1 = std::numeric_limits<double>::max();
     double Gbest1 = std::numeric_limits<double>::max();
-    int popsize = 1000;
+    int popsize = (int)configs["POPSIZE"];
     char** x = (char**) malloc(sizeof (char*)*popsize);
     char** xpbest = (char **) malloc(sizeof (char*)*popsize);
     double** vel = (double**) malloc(sizeof (double*)*popsize);
@@ -50,15 +53,15 @@ int main(int argc, const char** argv) {
         for (int i = 0; i < popsize; i++) {
             Model* m = master->clone();
             pbest[i] = fx[i] = m->fx_function_solve(malloc_size, x[i], false);
-            if(m)
+            if (m)
                 delete m;
         }
 
-        double w1 = 0.5;
-        double c1 = 1;
-        double c2 = 1;
-        int maxiter = 100;
-        double vmax = 4;
+        double w1 = configs["WEIGHT"];
+        double c1 = configs["C1"];
+        double c2 = configs["C2"];
+        int maxiter = configs["ITERATION"];
+        double vmax = configs["VMAX"];
 
         int l;
         double gbest;
@@ -72,7 +75,7 @@ int main(int argc, const char** argv) {
             for (int i = 0; i < popsize; i++) {
                 Model* m = master->clone();
                 fx[i] = m->fx_function_solve(malloc_size, x[i], false);
-                if(m){
+                if (m) {
                     delete m;
                 }
                 if (fx[i] < pbest[i]) {
@@ -139,13 +142,13 @@ int main(int argc, const char** argv) {
         //		printf("%lf %lf\n", Gbest1, Pbest1);
     }
     printf("%s : %lf\n", file_name, Gbest1);
-    
+
     Model *m = master->clone();
     double best_y = m->fx_function_solve(malloc_size, xgbest, true);
-    if(m){
+    if (m) {
         delete m;
     }
-    
+
     printf("Best Result: %lf\n", best_y);
 
     for (int i = 0; i < popsize; i++) {
@@ -164,9 +167,9 @@ int main(int argc, const char** argv) {
     free(pbest);
     free(xgbest);
 
-    if(master){
+    if (master) {
         delete master;
     }
-    
+
     return 0;
 }

@@ -19,9 +19,9 @@
         <in>model.cpp</in>
       </df>
       <df name="test">
+        <in>test_1.cpp</in>
+        <in>test_2.cpp</in>
         <in>test_poon.cpp</in>
-        <in>test_poon_v2.cpp</in>
-        <in>test_poon_v3.cpp</in>
         <in>test_simple.cpp</in>
       </df>
     </df>
