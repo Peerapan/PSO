@@ -266,7 +266,7 @@ double Model::fx_function_solve(int x_size, char* x, bool display) {
         double duration = ((abs(cc_containers[r]->_w - areas[a]->_w) * TRAVEL_TIME) + (2 * CONTROL_TIME));
         y += duration;
         if (display) {
-            printf("Move %d( %d, %d, %d ) to ( %d, %d, %d ) (%lf->%f)\n", r,
+            printf("Move %d( %d, %d, %d ) to ( %d, %d, %d ) (%lf->%f)\n", r+1,
                     cc_containers[r]->_h, cc_containers[r]->_w, cc_containers[r]->_l,
                     areas[a]->_h, areas[a]->_w, areas[a]->_l,
                     duration, y);
@@ -315,7 +315,7 @@ double Model::fx_function_solve(int x_size, char* x, bool display) {
             }
             duration = ((areas[a]->_w + 1) * TRAVEL_TIME) + (2 * CONTROL_TIME);
             y += duration;
-            if (display) printf("IMP TRAVEL TO %d, %d [%d] (%lf -> %lf)\n", areas[a]->_w, areas[a]->_l, a, duration, y);
+            if (display) printf("IMP TRAVEL TO %d, %d [%d] (%lf -> %lf)\n", areas[a]->_w, areas[a]->_l, a+1, duration, y);
             last_x = areas[a]->_w;
             last_y = areas[a]->_l;
         } else {
@@ -329,10 +329,10 @@ double Model::fx_function_solve(int x_size, char* x, bool display) {
             double duration = 0;
             duration = (abs(cc_containers[r]->_w - last_x) * TRAVEL_TIME);
             y += duration;
-            if (display) printf("EXP TRAVEL FROM %d, %d TO %d, %d [%d] (%lf -> %lf)\n", last_x, last_y, cc_containers[r]->_w, cc_containers[r]->_l, r, duration, y);
+            if (display) printf("EXP TRAVEL FROM %d, %d TO %d, %d [%d] (%lf -> %lf)\n", last_x, last_y, cc_containers[r]->_w, cc_containers[r]->_l, r+1, duration, y);
             duration = ((cc_containers[r]->_w + 1) * TRAVEL_TIME) + (2 * CONTROL_TIME);
             y += duration;
-            if (display) printf("EXP TRAVEL %d (%lf -> %lf)\n", cc_containers[r]->_w, duration, y);
+            if (display) printf("EXP TRAVEL %d, %d [%d] (%lf -> %lf)\n", cc_containers[r]->_w, cc_containers[r]->_l, r+1, duration, y);
             last_x = -1;
             last_y = -1;
         }
