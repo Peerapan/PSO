@@ -5,22 +5,26 @@
       <df name="build">
       </df>
       <df name="data">
-        <in>example_data_03.txt</in>
       </df>
       <df name="include">
         <in>function.h</in>
+        <in>ls_model.h</in>
         <in>model.h</in>
         <in>particle.h</in>
         <in>pso.h</in>
+        <in>ss_model.h</in>
         <in>swarm.h</in>
       </df>
       <df name="src">
         <in>function.cpp</in>
+        <in>ls_model.cpp</in>
         <in>model.cpp</in>
+        <in>ss_model.cpp</in>
       </df>
       <df name="test">
         <in>test_1.cpp</in>
         <in>test_2.cpp</in>
+        <in>test_3.cpp</in>
         <in>test_poon.cpp</in>
         <in>test_simple.cpp</in>
       </df>
@@ -63,10 +67,8 @@
       <runprofile version="9">
         <runcommandpicklist>
           <runcommandpicklistitem>"${OUTPUT_PATH}"</runcommandpicklistitem>
-          <runcommandpicklistitem>test_poon</runcommandpicklistitem>
-          <runcommandpicklistitem>./build/test_poon</runcommandpicklistitem>
         </runcommandpicklist>
-        <runcommand>./build/test_poon</runcommand>
+        <runcommand>"${OUTPUT_PATH}"</runcommand>
         <rundir>.</rundir>
         <buildfirst>false</buildfirst>
         <terminal-type>0</terminal-type>

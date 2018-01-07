@@ -1,4 +1,5 @@
 # Define the symbols we might want to change:
+
 CXX	:= c++
 CXXFLAGS := -g -std=c++14
 
