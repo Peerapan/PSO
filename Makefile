@@ -5,8 +5,9 @@ CXXFLAGS := -g -std=c++14
 
 OBJECTS	:= build/function.o build/test_1.o
 OBJECTS2 := build/function.o build/model.o build/ss_model.o build/test_2.o
+OBJECTS3 := build/function.o build/model.o build/all_model.o build/test_3.o
 
-all: build/test_1 build/test_2
+all: build/test_1 build/test_2 build/test_3
 
 build/test_1: $(OBJECTS)
 	$(CXX) $(OBJECTS) -o build/test_1
@@ -20,11 +21,20 @@ build/test_2: $(OBJECTS2)
 build/test_2.o: test/test_2.cpp
 	$(CXX) $(CXXFLAGS) -I./include -c  test/test_2.cpp -o build/test_2.o
 	
+build/test_3: $(OBJECTS3)
+	$(CXX) $(OBJECTS2) -o build/test_3
+
+build/test_3.o: test/test_3.cpp
+	$(CXX) $(CXXFLAGS) -I./include -c  test/test_3.cpp -o build/test_3.o
+	
 build/model.o: src/model.cpp
 	$(CXX) $(INCLUDES) -I./include $(CXXFLAGS) -c src/model.cpp -o build/model.o
 	
 build/ss_model.o: src/ss_model.cpp
 	$(CXX) $(INCLUDES) -I./include $(CXXFLAGS) -c src/ss_model.cpp -o build/ss_model.o
+
+build/all_model.o: src/all_model.cpp
+	$(CXX) $(INCLUDES) -I./include $(CXXFLAGS) -c src/all_model.cpp -o build/all_model.o
 	
 build/function.o: src/function.cpp
 	$(CXX) $(INCLUDES) -I./include $(CXXFLAGS) -c src/function.cpp -o build/function.o

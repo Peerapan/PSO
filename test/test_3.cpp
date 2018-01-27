@@ -1,5 +1,5 @@
 #include "function.h"
-#include "model.h"
+#include "all_model.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,13 +11,13 @@
 
 #define WEIGHT 1000
 
-int ss_main(int argc, const char** argv) {
+int main(int argc, const char** argv) {
     const char* file_name = argv[1];
     
     std::map<std::string, double> configs;
     read_configs(configs);
     
-    Model* master = new Model(file_name);
+    All_Model* master = new All_Model(file_name);
     int malloc_size = master->get_bit_size();
 
     double Pbest1 = std::numeric_limits<double>::max();
@@ -51,7 +51,7 @@ int ss_main(int argc, const char** argv) {
         }
 
         for (int i = 0; i < popsize; i++) {
-            Model* m = master->clone();
+            All_Model* m = static_cast<All_Model*>(master->clone());
             pbest[i] = fx[i] = m->fx_function_solve(malloc_size, x[i], false);
             if (m)
                 delete m;
@@ -73,7 +73,7 @@ int ss_main(int argc, const char** argv) {
         for (int iter = 1; iter <= maxiter; iter++) {
             double w = 0.5;
             for (int i = 0; i < popsize; i++) {
-                Model* m = master->clone();
+                All_Model* m = static_cast<All_Model*>(master->clone());
                 fx[i] = m->fx_function_solve(malloc_size, x[i], false);
                 if (m) {
                     delete m;
@@ -142,7 +142,7 @@ int ss_main(int argc, const char** argv) {
     }
     printf("%s : %lf\n", file_name, Gbest1);
 
-    Model *m = master->clone();
+    All_Model *m = static_cast<All_Model*>(master->clone());
     double best_y = m->fx_function_solve(malloc_size, xgbest, true);
     if (m) {
         delete m;
@@ -171,12 +171,4 @@ int ss_main(int argc, const char** argv) {
     }
 
     return 0;
-}
-
-int ls_main(int argc, const char** argv){
-
-}
-
-int main(int argc, const char** argv) {
-    ss_main(argc, argv);
 }

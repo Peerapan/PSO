@@ -11,19 +11,19 @@
 #include <algorithm>
 
 #include "function.h"
-#include "ss_model.h"
+#include "all_model.h"
 
-SS_Model::SS_Model() {
+All_Model::All_Model() {
 
 }
 
-SS_Model::SS_Model(const char*& input) {
+All_Model::All_Model(const char*& input) {
     load_data(input);
     analyze();
     calculate_malloc_size();
 }
 
-SS_Model::~SS_Model() {
+All_Model::~All_Model() {
     for (auto& it : cc_containers) {
         if (it.second) {
             delete it.second;
@@ -38,7 +38,7 @@ SS_Model::~SS_Model() {
     }
 }
 
-void SS_Model::load_data(const char* file) {
+void All_Model::load_data(const char* file) {
     FILE *ptr = NULL;
     ptr = fopen(file, "r");
     if (ptr) {
@@ -79,11 +79,19 @@ void SS_Model::load_data(const char* file) {
             fscanf(ptr, "%d", &t);
             exp_ss.insert(t);
         }
+        //! Number of IMP LS
+        fscanf(ptr, "%d", &imp_ls);
+        //! Number of EXP SS
+        fscanf(ptr, "%d", &n);
+        for (int i = 0; i < n; i++) {
+            fscanf(ptr, "%d", &t);
+            exp_ls.insert(t);
+        }
     }
     fclose(ptr);
 }
 
-void SS_Model::analyze() {
+void All_Model::analyze() {
     std::vector<std::pair<int, dat*> > pairs;
     for (auto itr = cc_containers.begin(); itr != cc_containers.end(); ++itr) {
         pairs.push_back(*itr);
@@ -95,10 +103,16 @@ void SS_Model::analyze() {
         table[it.second->_w][it.second->_l].push_back(it.first);
     }
     for (int i = 0; i < imp_ss; i++) {
-        imp_pool.push_back(i);
+        imp_ss_pool.push_back(i);
+    }
+    for (int i = 0; i < imp_ls; i++) {
+        imp_ls_pool.push_back(i);
     }
     for (auto& it : exp_ss) {
-        exp_pool.push_back(it);
+        exp_ss_pool.push_back(it);
+    }
+    for (auto& it : exp_ls) {
+        exp_ls_pool.push_back(it);
     }
     for (auto& it : areas) {
         area_pool.push_back(it.first);
@@ -113,7 +127,7 @@ void SS_Model::analyze() {
     }
 }
 
-int SS_Model::calculate_malloc_size() {
+int All_Model::calculate_malloc_size() {
     int sbit = 0;
     int all = W*L;
 
@@ -132,8 +146,8 @@ int SS_Model::calculate_malloc_size() {
     return allocate_size;
 }
 
-SS_Model* SS_Model::clone() {
-    SS_Model *m = new SS_Model();
+All_Model* All_Model::clone() {
+    All_Model *m = new All_Model();
 
     m->W = this->W;
     m->H = this->H;
@@ -161,14 +175,18 @@ SS_Model* SS_Model::clone() {
     for (auto& it : this->exp_ss) {
         m->exp_ss.insert(it);
     }
-
+    m->imp_ls = this->imp_ls;
+    for (auto& it : this->exp_ls) {
+        m->exp_ls.insert(it);
+    }
+    
     m->analyze();
     m->calculate_malloc_size();
 
     return m;
 }
 
-int SS_Model::pop_area_pool(int idx) {
+int All_Model::pop_area_pool(int idx) {
     int a = area_pool[idx];
     if (areas[a]->_h + 1 < H) {
         int n = areas.size();
@@ -181,7 +199,7 @@ int SS_Model::pop_area_pool(int idx) {
     return a;
 }
 
-int SS_Model::pop_res_pool(int idx) {
+int All_Model::pop_res_pool(int idx) {
     int r = res_pool[idx];
     int nt = table[cc_containers[r]->_w][cc_containers[r]->_l][cc_containers[r]->_h - 1];
     if (cc_containers[r]->_h - 1 >= 0 && res.find(nt) != res.end()) {
@@ -194,14 +212,14 @@ int SS_Model::pop_res_pool(int idx) {
     return r;
 }
 
-int SS_Model::pop_pool(std::vector<int>& pool, int idx) {
+int All_Model::pop_pool(std::vector<int>& pool, int idx) {
     int r = pool[idx];
     pool[idx] = pool[pool.size() - 1];
     pool.pop_back();
     return r;
 }
 
-void SS_Model::find_res() {
+void All_Model::find_res() {
     for (int i = 0; i < W; i++) {
         for (int j = 0; j < L; j++) {
             for (int k = 0; k < table[i][j].size(); k++) {
@@ -216,7 +234,7 @@ void SS_Model::find_res() {
     }
 }
 
-double SS_Model::fx_function_solve(int x_size, char* x, bool display) {
+double All_Model::fx_function_solve(int x_size, char* x, bool display) {
     double y = 0;
     int start = 0;
     int all = W*L;
@@ -228,13 +246,6 @@ double SS_Model::fx_function_solve(int x_size, char* x, bool display) {
     int front_num = (int) pow(2, res_bit);
     int last_num = (int) pow(2, all_bit);
     for (int i = 0; i < res_steps; i++) {
-        //        if (display) {
-        //            printf("Binary: ");
-        //            for (int j = start; j < start + res_bit + all_bit; j++) {
-        //                printf("%d", x[j]);
-        //            }
-        //            printf("\n");
-        //        }
         int res_it = binary_2_decimal(res_bit, x + start);
         start += res_bit;
         int area_it = binary_2_decimal(all_bit, x + start);
@@ -284,12 +295,12 @@ double SS_Model::fx_function_solve(int x_size, char* x, bool display) {
         start += front_bit;
         area_it = binary_2_decimal(last_bit, x + start);
         start += last_bit;
-        if ((opd == 0 && !imp_pool.empty()) || exp_pool.empty()) {
+        if ((opd == 0 && !imp_ss_pool.empty()) || exp_ss_pool.empty()) {
             //! IMPORT
             int idx_a = adjust(area_it, last_num - 1, area_pool.size() - 1);
             int a = pop_area_pool(idx_a);
-            int idx_r = adjust(it, front_num - 1, imp_pool.size() - 1);
-            int r = pop_pool(imp_pool, idx_r);
+            int idx_r = adjust(it, front_num - 1, imp_ss_pool.size() - 1);
+            int r = pop_pool(imp_ss_pool, idx_r);
 #ifdef DEBUG
             printf("IMP %d to ( %d, %d, %d )\n", r, areas[des]->_h, areas[des]->_w, areas[des]->_l);
 #endif
@@ -315,8 +326,8 @@ double SS_Model::fx_function_solve(int x_size, char* x, bool display) {
             last_y = areas[a]->_l;
         } else {
             //! EXPORT
-            int idx_r = adjust(it, front_num - 1, exp_pool.size() - 1);
-            int r = pop_pool(exp_pool, idx_r);
+            int idx_r = adjust(it, front_num - 1, exp_ss_pool.size() - 1);
+            int r = pop_pool(exp_ss_pool, idx_r);
 #ifdef DEBUG
             printf("EXP %d( %d, %d, %d ) to SS\n", r,
                     cc_containers[r]->_h, cc_containers[r]->_w, cc_containers[r]->_l);
@@ -348,7 +359,93 @@ double SS_Model::fx_function_solve(int x_size, char* x, bool display) {
     return y;
 }
 
-void SS_Model::display() {
+double All_Model::fx_function_solve_2(int x_size, char* x, bool display) {
+    double y = 0;
+    int start = 0;
+    int all = W*L;
+    int last_x = -1;
+    int last_y = -1;
+#ifdef DEBUG
+    printf("IMP_LS: %d\n", imp_ls);
+    printf("EXP_LS: %d\n", exp_ls.size());
+#endif
+    int front_bit = decimal_2_binary_size(max_ls_steps);
+    int last_bit = decimal_2_binary_size(all);
+    int front_num = (int) pow(2, front_bit);
+    int last_num = (int) pow(2, last_bit);
+    int total_ls_steps = imp_ls_steps + exp_ls_steps;
+    for (int i = 0; i < total_ls_steps; i++) {
+        int it, area_it;
+        char opd = x[start++];
+        it = binary_2_decimal(front_bit, x + start);
+        start += front_bit;
+        area_it = binary_2_decimal(last_bit, x + start);
+        start += last_bit;
+        if ((opd == 0 && !imp_ls_pool.empty()) || exp_ls_pool.empty()) {
+            //! IMPORT
+            int idx_a = adjust(area_it, last_num - 1, area_pool.size() - 1);
+            int a = pop_area_pool(idx_a);
+            int idx_r = adjust(it, front_num - 1, imp_ls_pool.size() - 1);
+            int r = pop_pool(imp_ls_pool, idx_r);
+#ifdef DEBUG
+            printf("IMP %d to ( %d, %d, %d )\n", r, areas[des]->_h, areas[des]->_w, areas[des]->_l);
+#endif
+            double duration = 0;
+            if (last_x != -1) {
+                duration = ((last_x + 1) * TRAVEL_TIME);
+                y += duration;
+                if (display) printf("IMP MOVE FROM %d, %d TO LS (%lf -> %lf)\n", last_x, last_y, duration, y);
+                last_x = -1;
+                last_y = -1;
+            }
+            duration = CONTROL_TIME;
+            y += duration;
+            if (display) printf("PICK IMP-%d (%lf -> %lf)\n", r + 1, duration, y);
+            duration = ((areas[a]->_w + 1) * TRAVEL_TIME);
+            y += duration;
+            if (display) printf("IMP MOVE IMP-%d TO %d (%d, %d, %d) (%lf -> %lf)\n",
+                    r + 1, a + 1, areas[a]->_h, areas[a]->_w, areas[a]->_l, duration, y);
+            duration = CONTROL_TIME;
+            y += duration;
+            if (display) printf("DROP IMP-%d (%lf -> %lf)\n", r + 1, duration, y);
+            last_x = areas[a]->_w;
+            last_y = areas[a]->_l;
+        } else {
+            //! EXPORT
+            int idx_r = adjust(it, front_num - 1, exp_ls_pool.size() - 1);
+            int r = pop_pool(exp_ls_pool, idx_r);
+#ifdef DEBUG
+            printf("EXP %d( %d, %d, %d ) to LS\n", r,
+                    cc_containers[r]->_h, cc_containers[r]->_w, cc_containers[r]->_l);
+#endif
+            double duration = 0;
+            duration = (abs(cc_containers[r]->_w - last_x) * TRAVEL_TIME);
+            y += duration;
+            if (display) printf("EXP MOVE FROM %d, %d TO %d (%d, %d, %d) (%lf -> %lf)\n",
+                    last_x, last_y, r + 1, cc_containers[r]->_h, cc_containers[r]->_w, cc_containers[r]->_l, duration, y);
+            duration = CONTROL_TIME;
+            y += duration;
+            if (display) printf("PICK %d (%lf -> %lf)\n", r + 1, duration, y);
+            duration = ((cc_containers[r]->_w + 1) * TRAVEL_TIME);
+            y += duration;
+            if (display) printf("EXP MOVE %d (%d, %d, %d) TO LS (%lf -> %lf)\n",
+                    r + 1, cc_containers[r]->_h, cc_containers[r]->_w, cc_containers[r]->_l, duration, y);
+            duration = CONTROL_TIME;
+            y += duration;
+            if (display) printf("DROP %d (%lf -> %lf)\n", r + 1, duration, y);
+            last_x = -1;
+            last_y = -1;
+        }
+    }
+    if (last_x != -1 && last_y != -1) {
+        double duration = (last_x + 1) * TRAVEL_TIME;
+        y += duration;
+        if (display) printf("TRAVEL BACK %d, %d (%lf -> %lf)\n", last_x, last_y, duration, y);
+    }
+    return y;
+}
+
+void All_Model::display() {
     for (auto& it : cc_containers) {
         printf("%d %d %d\n", it.second->_h, it.second->_w, it.second->_l);
     }
