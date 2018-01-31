@@ -6,8 +6,9 @@ CXXFLAGS := -g -std=c++14
 OBJECTS	:= build/function.o build/test_1.o
 OBJECTS2 := build/function.o build/model.o build/ss_model.o build/test_2.o
 OBJECTS3 := build/function.o build/model.o build/all_model.o build/test_3.o
+OBJECTS_GRAPH := test/test_graph.cpp
 
-all: build/test_1 build/test_2 build/test_3
+all: build/test_1 build/test_2 build/test_3 build/test_graph
 
 build/test_1: $(OBJECTS)
 	$(CXX) $(OBJECTS) -o build/test_1
@@ -26,6 +27,9 @@ build/test_3: $(OBJECTS3)
 
 build/test_3.o: test/test_3.cpp
 	$(CXX) $(CXXFLAGS) -I./include -c  test/test_3.cpp -o build/test_3.o
+	
+build/test_graph: $(OBJECTS_GRAPH)
+	$(CXX) $(OBJECTS_GRAPH) -I./include -o build/test_graph $(CXXFLAGS)
 	
 build/model.o: src/model.cpp
 	$(CXX) $(INCLUDES) -I./include $(CXXFLAGS) -c src/model.cpp -o build/model.o
