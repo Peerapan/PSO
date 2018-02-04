@@ -1,6 +1,8 @@
 #ifndef LINEAR_GRAPH_H
 #define LINEAR_GRAPH_H
 
+#include <string>
+
 // y=mx+b
 
 class TimeGraph{
@@ -26,6 +28,12 @@ public:
                 return true;
         }
         return false;
+    }
+    
+    std::string toString(){
+        char _str[100];
+        sprintf(_str, "Move from %d to %d at %d to %d", min_y, max_y,min_x, max_x );
+        return _str;
     }
 };
 

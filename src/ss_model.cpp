@@ -256,6 +256,8 @@ double SS_Model::fx_function_solve(int x_size, char* x, bool display) {
         duration = CONTROL_TIME;
         y += duration;
         if (display) printf("PICK %d (%lf -> %lf)\n", r + 1, duration, y);
+        duration = (abs(areas[a]->_w - cc_containers[r]->_w) * TRAVEL_TIME);
+        y += duration;
         if (display) {
             printf("Move %d( %d, %d, %d ) to ( %d, %d, %d ) (%lf->%f)\n", r + 1,
                     cc_containers[r]->_h, cc_containers[r]->_w, cc_containers[r]->_l,

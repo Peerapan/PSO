@@ -13,6 +13,8 @@
 #include "function.h"
 #include "all_model.h"
 
+#include "linear_graph.h"
+
 All_Model::All_Model() {
 
 }
@@ -36,6 +38,16 @@ All_Model::~All_Model() {
             it.second = NULL;
         }
     }
+    for(auto it : ss_graph){
+        if(it){
+            delete it;
+        }
+    }
+    for(auto it : ls_graph){
+        if(it){
+            delete it;
+        }
+    }
 }
 
 void All_Model::load_data(const char* file) {
@@ -56,6 +68,7 @@ void All_Model::load_data(const char* file) {
             fscanf(ptr, "%d %d %d", &x, &y, &z);
             dat* _a = new dat(x, y, z);
             cc_containers.insert(std::make_pair(i, _a));
+            last_cc_container = i;
         }
         //! Read Areas
         fscanf(ptr, "%d", &n);
@@ -65,11 +78,11 @@ void All_Model::load_data(const char* file) {
             areas.insert(std::make_pair(i, _a));
         }
         int t;
-        //! Read Res
+        //! Read Res SS
         fscanf(ptr, "%d", &n);
         for (int i = 0; i < n; i++) {
             fscanf(ptr, "%d", &t);
-            res.insert(t);
+            res_ss.insert(t);
         }
         //! Number of IMP SS
         fscanf(ptr, "%d", &imp_ss);
@@ -79,9 +92,15 @@ void All_Model::load_data(const char* file) {
             fscanf(ptr, "%d", &t);
             exp_ss.insert(t);
         }
+        //! Read Res LS
+        fscanf(ptr, "%d", &n);
+        for (int i = 0; i < n; i++) {
+            fscanf(ptr, "%d", &t);
+            res_ls.insert(t);
+        }
         //! Number of IMP LS
         fscanf(ptr, "%d", &imp_ls);
-        //! Number of EXP SS
+        //! Number of EXP LS
         fscanf(ptr, "%d", &n);
         for (int i = 0; i < n; i++) {
             fscanf(ptr, "%d", &t);
@@ -100,7 +119,9 @@ void All_Model::analyze() {
         return a.second->_h < b.second->_h;
     });
     for (auto& it : pairs) {
-        table[it.second->_w][it.second->_l].push_back(it.first);
+        if( it.second->_w >= 0 && it.second->_l >= 0){
+            table[it.second->_w][it.second->_l].push_back(it.first);
+        }
     }
     for (int i = 0; i < imp_ss; i++) {
         imp_ss_pool.push_back(i);
@@ -120,9 +141,30 @@ void All_Model::analyze() {
     for (int i = 0; i < W; i++) {
         for (int j = 0; j < L; j++) {
             int k = table[i][j].size() - 1;
-            if (k >= 0 && res.find(table[i][j][k]) != res.end()) {
-                res_pool.push_back(table[i][j][k]);
+            if (k >= 0 && res_ss.find(table[i][j][k]) != res_ss.end()) {
+                res_ss_pool.push_back(table[i][j][k]);
             }
+        }
+    }
+    for (int i = 0; i < W; i++) {
+        for (int j = 0; j < L; j++) {
+            int k = table[i][j].size() - 1;
+            if (k >= 0 && res_ls.find(table[i][j][k]) != res_ls.end()) {
+                res_ls_pool.push_back(table[i][j][k]);
+            }
+        }
+    }
+}
+
+void All_Model::ls_analyze() {
+    std::vector<int>::iterator it = area_pool.begin();
+    while (it != area_pool.end())
+    {
+        if(mark[areas[*it]->_w][areas[*it]->_l]){
+            area_pool.erase(it);
+        }
+        else{
+            ++it;
         }
     }
 }
@@ -131,10 +173,12 @@ int All_Model::calculate_malloc_size() {
     int sbit = 0;
     int all = W*L;
 
-    res_steps = res.size();
-    res_bits = (decimal_2_binary_size(res_steps) + decimal_2_binary_size(all)) * res_steps;
-
-    sbit += res_bits;
+    res_ss_steps = res_ss.size();
+    res_ss_bits = (decimal_2_binary_size(res_ss_steps) + decimal_2_binary_size(all)) * res_ss_steps;
+    res_ls_steps = res_ls.size();
+    res_ls_bits = (decimal_2_binary_size(res_ls_steps) + decimal_2_binary_size(all)) * res_ls_steps;
+    
+    sbit += res_ss_bits;
     imp_ss_steps = imp_ss;
     exp_ss_steps = exp_ss.size();
     max_ss_steps = std::max(imp_ss_steps, exp_ss_steps);
@@ -168,8 +212,11 @@ All_Model* All_Model::clone() {
         dat* _a = new dat(it.second->_h, it.second->_w, it.second->_l);
         m->areas.insert(std::make_pair(i, _a));
     }
-    for (auto& it : this->res) {
-        m->res.insert(it);
+    for (auto& it : this->res_ss) {
+        m->res_ss.insert(it);
+    }
+    for (auto& it : this->res_ls) {
+        m->res_ls.insert(it);
     }
     m->imp_ss = this->imp_ss;
     for (auto& it : this->exp_ss) {
@@ -199,15 +246,26 @@ int All_Model::pop_area_pool(int idx) {
     return a;
 }
 
-int All_Model::pop_res_pool(int idx) {
-    int r = res_pool[idx];
+int All_Model::pop_res_ss_pool(int idx) {
+    int r = res_ss_pool[idx];
     int nt = table[cc_containers[r]->_w][cc_containers[r]->_l][cc_containers[r]->_h - 1];
-    if (cc_containers[r]->_h - 1 >= 0 && res.find(nt) != res.end()) {
-        int n = cc_containers.size();
-        res_pool[idx] = nt;
+    if (cc_containers[r]->_h - 1 >= 0 && res_ss.find(nt) != res_ss.end()) {
+        res_ss_pool[idx] = nt;
     } else {
-        res_pool[idx] = res_pool[res_pool.size() - 1];
-        res_pool.pop_back();
+        res_ss_pool[idx] = res_ss_pool[res_ss_pool.size() - 1];
+        res_ss_pool.pop_back();
+    }
+    return r;
+}
+
+int All_Model::pop_res_ls_pool(int idx) {
+    int r = res_ls_pool[idx];
+    int nt = table[cc_containers[r]->_w][cc_containers[r]->_l][cc_containers[r]->_h - 1];
+    if (cc_containers[r]->_h - 1 >= 0 && res_ls.find(nt) != res_ls.end()) {
+        res_ls_pool[idx] = nt;
+    } else {
+        res_ls_pool[idx] = res_ls_pool[res_ls_pool.size() - 1];
+        res_ls_pool.pop_back();
     }
     return r;
 }
@@ -225,7 +283,7 @@ void All_Model::find_res() {
             for (int k = 0; k < table[i][j].size(); k++) {
                 if (exp_ss.find(table[i][j][k]) != exp_ss.end()) {
                     for (int l = k + 1; l < table[i][j].size(); l++) {
-                        res.insert(table[i][j][l]);
+                        res_ss.insert(table[i][j][l]);
                     }
                     break;
                 }
@@ -234,24 +292,34 @@ void All_Model::find_res() {
     }
 }
 
-double All_Model::fx_function_solve(int x_size, char* x, bool display) {
+double All_Model::fx_function_solve(int x_size, char* x, bool edited) {
     double y = 0;
     int start = 0;
     int all = W*L;
     int last_x = -1;
     int last_y = -1;
 
-    int res_bit = decimal_2_binary_size(res_steps);
+    if(edited){
+        mark.resize(W);
+        for (int i = 0; i < W; i++) {
+            mark[i].resize(L);
+            for(int j = 0; j < L; j++){
+                mark[i][j] = false;
+            }
+        }
+    }
+    
+    int res_ss_bit = decimal_2_binary_size(res_ss_steps);
     int all_bit = decimal_2_binary_size(all);
-    int front_num = (int) pow(2, res_bit);
+    int front_num = (int) pow(2, res_ss_bit);
     int last_num = (int) pow(2, all_bit);
-    for (int i = 0; i < res_steps; i++) {
-        int res_it = binary_2_decimal(res_bit, x + start);
-        start += res_bit;
+    for (int i = 0; i < res_ss_steps; i++) {
+        int res_it = binary_2_decimal(res_ss_bit, x + start);
+        start += res_ss_bit;
         int area_it = binary_2_decimal(all_bit, x + start);
         start += all_bit;
-        int idx_r = adjust(res_it, front_num - 1, res_pool.size() - 1);
-        int r = pop_res_pool(idx_r);
+        int idx_r = adjust(res_it, front_num - 1, res_ss_pool.size() - 1);
+        int r = pop_res_ss_pool(idx_r);
         int des = adjust(area_it, last_num - 1, area_pool.size() - 1);
         int a = pop_area_pool(des);
         int _x = cc_containers[r]->_w;
@@ -259,23 +327,40 @@ double All_Model::fx_function_solve(int x_size, char* x, bool display) {
         double duration = 0;
         if (last_x != _x) {
             duration = (abs(last_x - _x) * TRAVEL_TIME);
+            if (edited){
+                ss_graph.push_back( new SlopeTimeGraph((int)y, (int)y+duration, last_x, _x) );
+                printf("MOVE FROM %d, %d TO %d, %d (%lf + %lf -> %lf)\n", last_x, last_y, _x, _y, y, duration, y+duration);
+            }
             y += duration;
-            if (display) printf("MOVE FROM %d, %d TO %d, %d (%lf -> %lf)\n", last_x, last_y, _x, _y, duration, y);
             last_x = _x;
             last_y = _y;
         }
         duration = CONTROL_TIME;
+        if (edited){
+            ss_graph.push_back( new StableTimeGraph((int)y, (int)y+duration, _x) );
+            printf("PICK %d (%lf + %lf -> %lf)\n", r + 1, y, duration, y+duration);
+        }
         y += duration;
-        if (display) printf("PICK %d (%lf -> %lf)\n", r + 1, duration, y);
-        if (display) {
-            printf("Move %d( %d, %d, %d ) to ( %d, %d, %d ) (%lf->%f)\n", r + 1,
+        duration = (abs(areas[a]->_w - cc_containers[r]->_w) * TRAVEL_TIME);
+        if (edited) {
+            ss_graph.push_back( new SlopeTimeGraph((int)y, (int)y+duration, _x, areas[a]->_w) );
+            printf("Move %d( %d, %d, %d ) to ( %d, %d, %d ) (%lf + %lf -> %f)\n", r + 1,
                     cc_containers[r]->_h, cc_containers[r]->_w, cc_containers[r]->_l,
                     areas[a]->_h, areas[a]->_w, areas[a]->_l,
-                    duration, y);
+                    y, duration, y + duration);
+            mark[cc_containers[r]->_w][cc_containers[r]->_l] = true;
+            mark[areas[a]->_w][areas[a]->_l] = true;
+            cc_containers[r]->_h = areas[a]->_h;
+            cc_containers[r]->_w = areas[a]->_w;
+            cc_containers[r]->_l = areas[a]->_l;
         }
-        duration = CONTROL_TIME;
         y += duration;
-        if (display) printf("DROP %d (%lf -> %lf)\n", r + 1, duration, y);
+        duration = CONTROL_TIME;
+        if (edited) {
+            ss_graph.push_back( new StableTimeGraph((int)y, (int)y+duration, areas[a]->_w ) );
+            printf("DROP %d (%lf + %lf -> %lf)\n", r + 1, y, duration, y + duration);
+        }
+        y += duration;
         last_x = areas[a]->_w;
         last_y = areas[a]->_l;
     }
@@ -301,78 +386,151 @@ double All_Model::fx_function_solve(int x_size, char* x, bool display) {
             int a = pop_area_pool(idx_a);
             int idx_r = adjust(it, front_num - 1, imp_ss_pool.size() - 1);
             int r = pop_pool(imp_ss_pool, idx_r);
-#ifdef DEBUG
-            printf("IMP %d to ( %d, %d, %d )\n", r, areas[des]->_h, areas[des]->_w, areas[des]->_l);
-#endif
             double duration = 0;
             if (last_x != -1) {
                 duration = ((last_x + 1) * TRAVEL_TIME);
+                if (edited) {
+                    ss_graph.push_back( new SlopeTimeGraph((int)y, (int)y+duration, last_x, -1) );
+                    printf("IMP MOVE FROM %d, %d TO SS (%lf + %lf -> %lf)\n", last_x, last_y, y, duration, y + duration);
+                }
                 y += duration;
-                if (display) printf("IMP MOVE FROM %d, %d TO SS (%lf -> %lf)\n", last_x, last_y, duration, y);
                 last_x = -1;
                 last_y = -1;
             }
             duration = CONTROL_TIME;
+            if (edited) {
+                ss_graph.push_back( new StableTimeGraph(-1, (int)y, (int)y+duration) );
+                printf("PICK IMP-%d (%lf + %lf -> %lf)\n", r + 1, y, duration, y + duration);
+            }
             y += duration;
-            if (display) printf("PICK IMP-%d (%lf -> %lf)\n", r + 1, duration, y);
             duration = ((areas[a]->_w + 1) * TRAVEL_TIME);
+            if (edited) {
+                ss_graph.push_back( new SlopeTimeGraph((int)y, (int)y+duration, -1, areas[a]->_w) );
+                printf("IMP MOVE IMP-%d TO %d (%d, %d, %d) (%lf + %lf -> %lf)\n",
+                    r + 1, a + 1, areas[a]->_h, areas[a]->_w, areas[a]->_l, 
+                    y, duration, y + duration);
+                mark[areas[a]->_w][areas[a]->_l] = true;
+                dat* _a = new dat(areas[a]->_h, areas[a]->_w, areas[a]->_l);
+                cc_containers.insert(std::make_pair(++last_cc_container, _a));  
+            }
             y += duration;
-            if (display) printf("IMP MOVE IMP-%d TO %d (%d, %d, %d) (%lf -> %lf)\n",
-                    r + 1, a + 1, areas[a]->_h, areas[a]->_w, areas[a]->_l, duration, y);
             duration = CONTROL_TIME;
+            if (edited) {
+                ss_graph.push_back( new StableTimeGraph(areas[a]->_w, (int)y, (int)y+duration) );
+                printf("DROP IMP-%d (%lf + %lf -> %lf)\n", r + 1, y, duration, y + duration);
+            }
             y += duration;
-            if (display) printf("DROP IMP-%d (%lf -> %lf)\n", r + 1, duration, y);
             last_x = areas[a]->_w;
             last_y = areas[a]->_l;
         } else {
             //! EXPORT
             int idx_r = adjust(it, front_num - 1, exp_ss_pool.size() - 1);
             int r = pop_pool(exp_ss_pool, idx_r);
-#ifdef DEBUG
-            printf("EXP %d( %d, %d, %d ) to SS\n", r,
-                    cc_containers[r]->_h, cc_containers[r]->_w, cc_containers[r]->_l);
-#endif
             double duration = 0;
             duration = (abs(cc_containers[r]->_w - last_x) * TRAVEL_TIME);
+            if (edited) {
+                ss_graph.push_back( new SlopeTimeGraph((int)y, (int)y+duration, last_x, cc_containers[r]->_w) );
+                printf("EXP MOVE FROM %d, %d TO %d (%d, %d, %d) (%lf + %lf -> %lf)\n",
+                    last_x, last_y, r + 1, cc_containers[r]->_h, cc_containers[r]->_w, cc_containers[r]->_l, y, duration, y + duration);
+            }
             y += duration;
-            if (display) printf("EXP MOVE FROM %d, %d TO %d (%d, %d, %d) (%lf -> %lf)\n",
-                    last_x, last_y, r + 1, cc_containers[r]->_h, cc_containers[r]->_w, cc_containers[r]->_l, duration, y);
             duration = CONTROL_TIME;
+            if (edited) {
+                ss_graph.push_back( new StableTimeGraph((int)y, (int)y+duration, cc_containers[r]->_w) );
+                printf("PICK %d (%lf + %lf -> %lf)\n", r + 1, y, duration, y + duration);
+            }
             y += duration;
-            if (display) printf("PICK %d (%lf -> %lf)\n", r + 1, duration, y);
             duration = ((cc_containers[r]->_w + 1) * TRAVEL_TIME);
+            if (edited) {
+                ss_graph.push_back( new SlopeTimeGraph((int)y, (int)y+duration, cc_containers[r]->_w, -1) );
+                printf("EXP MOVE %d (%d, %d, %d) TO SS (%lf + %lf -> %lf)\n",
+                    r + 1, cc_containers[r]->_h, cc_containers[r]->_w, cc_containers[r]->_l, y, duration, y + duration);
+                mark[cc_containers[r]->_w][cc_containers[r]->_l] = true;
+                cc_containers[r]->_h = 0;
+                cc_containers[r]->_w = -1;
+                cc_containers[r]->_l = -1;
+            }
             y += duration;
-            if (display) printf("EXP MOVE %d (%d, %d, %d) TO SS (%lf -> %lf)\n",
-                    r + 1, cc_containers[r]->_h, cc_containers[r]->_w, cc_containers[r]->_l, duration, y);
             duration = CONTROL_TIME;
+            if (edited) {
+                ss_graph.push_back( new StableTimeGraph((int)y, (int)y+duration, -1) );
+                printf("DROP %d (%lf + %lf -> %lf)\n", r + 1, y, duration, y + duration);
+            }
             y += duration;
-            if (display) printf("DROP %d (%lf -> %lf)\n", r + 1, duration, y);
             last_x = -1;
             last_y = -1;
         }
     }
     if (last_x != -1 && last_y != -1) {
         double duration = (last_x + 1) * TRAVEL_TIME;
+        if (edited) {
+            ss_graph.push_back( new SlopeTimeGraph((int)y, (int)y+duration, last_x, -1) );
+            printf("TRAVEL BACK %d, %d (%lf + %lf -> %lf)\n", last_x, last_y, y, duration, y + duration);
+        }
         y += duration;
-        if (display) printf("TRAVEL BACK %d, %d (%lf -> %lf)\n", last_x, last_y, duration, y);
     }
     return y;
 }
 
-double All_Model::fx_function_solve_2(int x_size, char* x, bool display) {
+double All_Model::fx_function_solve_2(int x_size, char* x, bool edited) {
     double y = 0;
     int start = 0;
     int all = W*L;
-    int last_x = -1;
-    int last_y = -1;
+    int last_x = W;
+    int last_y = W;
+    
+    int res_ls_bit = decimal_2_binary_size(res_ls_steps);
+    int all_bit = decimal_2_binary_size(all);
+    int front_num = (int) pow(2, res_ls_bit);
+    int last_num = (int) pow(2, all_bit);
+    for (int i = 0; i < res_ls_steps; i++) {
+        int res_it = binary_2_decimal(res_ls_bit, x + start);
+        start += res_ls_bit;
+        int area_it = binary_2_decimal(all_bit, x + start);
+        start += all_bit;
+        int idx_r = adjust(res_it, front_num - 1, res_ls_pool.size() - 1);
+        int r = pop_res_ls_pool(idx_r);
+        int des = adjust(area_it, last_num - 1, area_pool.size() - 1);
+        int a = pop_area_pool(des);
+        int _x = cc_containers[r]->_w;
+        int _y = cc_containers[r]->_l;
+        double duration = 0;
+        if (last_x != _x) {
+            duration = (abs(last_x - _x) * TRAVEL_TIME);
+            if (edited) ls_graph.push_back( new SlopeTimeGraph((int)y, (int)y+duration, last_x, _x) );
+            y += duration;
+            if (edited) printf("MOVE FROM %d, %d TO %d, %d (%lf -> %lf)\n", last_x, last_y, _x, _y, duration, y);
+            last_x = _x;
+            last_y = _y;
+        }
+        duration = CONTROL_TIME;
+        if (edited) ls_graph.push_back( new StableTimeGraph((int)y, (int)y+duration, _x) );
+        y += duration;
+        if (edited) printf("PICK %d (%lf -> %lf)\n", r + 1, duration, y);
+        duration = (abs(areas[a]->_w - cc_containers[r]->_w) * TRAVEL_TIME);
+        if (edited) ls_graph.push_back( new SlopeTimeGraph((int)y, (int)y+duration, _x, areas[a]->_w) );
+        y += duration;
+        if (edited) {
+            printf("Move %d( %d, %d, %d ) to ( %d, %d, %d ) (%lf->%f)\n", r + 1,
+                    cc_containers[r]->_h, cc_containers[r]->_w, cc_containers[r]->_l,
+                    areas[a]->_h, areas[a]->_w, areas[a]->_l,
+                    duration, y);
+        }
+        duration = CONTROL_TIME;
+        if (edited) ls_graph.push_back( new StableTimeGraph((int)y, (int)y+duration, areas[a]->_w ) );
+        y += duration;
+        if (edited) printf("DROP %d (%lf -> %lf)\n", r + 1, duration, y);
+        last_x = areas[a]->_w;
+        last_y = areas[a]->_l;
+    }
 #ifdef DEBUG
     printf("IMP_LS: %d\n", imp_ls);
     printf("EXP_LS: %d\n", exp_ls.size());
 #endif
     int front_bit = decimal_2_binary_size(max_ls_steps);
     int last_bit = decimal_2_binary_size(all);
-    int front_num = (int) pow(2, front_bit);
-    int last_num = (int) pow(2, last_bit);
+    front_num = (int) pow(2, front_bit);
+    last_num = (int) pow(2, last_bit);
     int total_ls_steps = imp_ls_steps + exp_ls_steps;
     for (int i = 0; i < total_ls_steps; i++) {
         int it, area_it;
@@ -387,66 +545,83 @@ double All_Model::fx_function_solve_2(int x_size, char* x, bool display) {
             int a = pop_area_pool(idx_a);
             int idx_r = adjust(it, front_num - 1, imp_ls_pool.size() - 1);
             int r = pop_pool(imp_ls_pool, idx_r);
-#ifdef DEBUG
-            printf("IMP %d to ( %d, %d, %d )\n", r, areas[des]->_h, areas[des]->_w, areas[des]->_l);
-#endif
             double duration = 0;
-            if (last_x != -1) {
-                duration = ((last_x + 1) * TRAVEL_TIME);
+            if (last_x != W) {
+                duration = (abs(last_x - W) * TRAVEL_TIME);
                 y += duration;
-                if (display) printf("IMP MOVE FROM %d, %d TO LS (%lf -> %lf)\n", last_x, last_y, duration, y);
-                last_x = -1;
-                last_y = -1;
+                if (edited) printf("IMP MOVE FROM %d, %d TO LS (%lf -> %lf)\n", last_x, last_y, duration, y);
+                last_x = W;
+                last_y = W;
             }
             duration = CONTROL_TIME;
             y += duration;
-            if (display) printf("PICK IMP-%d (%lf -> %lf)\n", r + 1, duration, y);
-            duration = ((areas[a]->_w + 1) * TRAVEL_TIME);
+            if (edited) printf("PICK IMP-%d (%lf -> %lf)\n", r + 1, duration, y);
+            duration = (abs(areas[a]->_w - W) * TRAVEL_TIME);
             y += duration;
-            if (display) printf("IMP MOVE IMP-%d TO %d (%d, %d, %d) (%lf -> %lf)\n",
+            if (edited) printf("IMP MOVE IMP-%d TO %d (%d, %d, %d) (%lf -> %lf)\n",
                     r + 1, a + 1, areas[a]->_h, areas[a]->_w, areas[a]->_l, duration, y);
             duration = CONTROL_TIME;
             y += duration;
-            if (display) printf("DROP IMP-%d (%lf -> %lf)\n", r + 1, duration, y);
+            if (edited) printf("DROP IMP-%d (%lf -> %lf)\n", r + 1, duration, y);
             last_x = areas[a]->_w;
             last_y = areas[a]->_l;
         } else {
             //! EXPORT
             int idx_r = adjust(it, front_num - 1, exp_ls_pool.size() - 1);
             int r = pop_pool(exp_ls_pool, idx_r);
-#ifdef DEBUG
-            printf("EXP %d( %d, %d, %d ) to LS\n", r,
-                    cc_containers[r]->_h, cc_containers[r]->_w, cc_containers[r]->_l);
-#endif
             double duration = 0;
             duration = (abs(cc_containers[r]->_w - last_x) * TRAVEL_TIME);
             y += duration;
-            if (display) printf("EXP MOVE FROM %d, %d TO %d (%d, %d, %d) (%lf -> %lf)\n",
+            if (edited) printf("EXP MOVE FROM %d, %d TO %d (%d, %d, %d) (%lf -> %lf)\n",
                     last_x, last_y, r + 1, cc_containers[r]->_h, cc_containers[r]->_w, cc_containers[r]->_l, duration, y);
             duration = CONTROL_TIME;
             y += duration;
-            if (display) printf("PICK %d (%lf -> %lf)\n", r + 1, duration, y);
-            duration = ((cc_containers[r]->_w + 1) * TRAVEL_TIME);
+            if (edited) printf("PICK %d (%lf -> %lf)\n", r + 1, duration, y);
+            duration = (abs(cc_containers[r]->_w - W) * TRAVEL_TIME);
             y += duration;
-            if (display) printf("EXP MOVE %d (%d, %d, %d) TO LS (%lf -> %lf)\n",
+            if (edited) printf("EXP MOVE %d (%d, %d, %d) TO LS (%lf -> %lf)\n",
                     r + 1, cc_containers[r]->_h, cc_containers[r]->_w, cc_containers[r]->_l, duration, y);
             duration = CONTROL_TIME;
             y += duration;
-            if (display) printf("DROP %d (%lf -> %lf)\n", r + 1, duration, y);
-            last_x = -1;
-            last_y = -1;
+            if (edited) printf("DROP %d (%lf -> %lf)\n", r + 1, duration, y);
+            last_x = W;
+            last_y = W;
         }
     }
-    if (last_x != -1 && last_y != -1) {
-        double duration = (last_x + 1) * TRAVEL_TIME;
+    if (last_x != W && last_y != W) {
+        double duration = abs(last_x - W) * TRAVEL_TIME;
         y += duration;
-        if (display) printf("TRAVEL BACK %d, %d (%lf -> %lf)\n", last_x, last_y, duration, y);
+        if (edited) printf("TRAVEL BACK %d, %d (%lf -> %lf)\n", last_x, last_y, duration, y);
     }
     return y;
 }
 
 void All_Model::display() {
+    printf("===============================================\n");
+    printf("----- Containers -----\n");
     for (auto& it : cc_containers) {
-        printf("%d %d %d\n", it.second->_h, it.second->_w, it.second->_l);
+        printf("%d: %d %d %d\n", it.first, it.second->_h, it.second->_w, it.second->_l);
     }
+    printf("----- GRAPH -----\n");
+    for(auto& it : ss_graph){
+        printf("%s\n", it->toString().c_str());
+    }
+    for(auto& it : ls_graph){
+        printf("%s\n", it->toString().c_str());
+    }
+    if(mark.size() > 0){
+        printf("----- MARK -----\n");
+        for(int i=0; i<W; i++){
+            for(int j=0; j<L; j++){
+                if(mark[i][j]){
+                    printf("%d, %d\n", i, j);
+                }
+            }
+        }
+    }
+    printf("----- AREA POOL -----\n");
+    for(auto& it : area_pool){
+        printf("%d, %d, %d\n", areas[it]->_h, areas[it]->_w, areas[it]->_l);
+    }
+    printf("===============================================\n");
 }

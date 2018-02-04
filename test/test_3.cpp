@@ -142,11 +142,115 @@ int main(int argc, const char** argv) {
     }
     printf("%s : %lf\n", file_name, Gbest1);
 
-    All_Model *m = static_cast<All_Model*>(master->clone());
-    double best_y = m->fx_function_solve(malloc_size, xgbest, true);
-    if (m) {
-        delete m;
+    master->display();
+    double best_y = master->fx_function_solve(malloc_size, xgbest, true);
+    master->display();
+    master->ls_analyze();
+    
+    for (int tt = 0; tt < 10; tt++) {
+        for (int i = 0; i < popsize; i++) {
+            for (int j = 0; j < malloc_size; j++) {
+                xpbest[i][j] = x[i][j] = rand() % 2;
+                vel[i][j] = ((double) rand() / (RAND_MAX)) - 0.5;
+                one_vel[i][j] = ((double) rand() / (RAND_MAX)) - 0.5;
+                zero_vel[i][j] = ((double) rand() / (RAND_MAX)) - 0.5;
+            }
+        }
+
+        for (int i = 0; i < popsize; i++) {
+            All_Model* m = static_cast<All_Model*>(master->clone());
+            pbest[i] = fx[i] = m->fx_function_solve(malloc_size, x[i], false);
+            if (m)
+                delete m;
+        }
+
+        double w1 = configs["WEIGHT"];
+        double c1 = configs["C1"];
+        double c2 = configs["C2"];
+        int maxiter = configs["ITERATION"];
+        double vmax = configs["VMAX"];
+
+        int l;
+        double gbest;
+        double gg;
+
+        minimum(l, gbest, popsize, fx);
+        memcpy(xgbest, x[l], malloc_size);
+
+        for (int iter = 1; iter <= maxiter; iter++) {
+            double w = 0.5;
+            for (int i = 0; i < popsize; i++) {
+                All_Model* m = static_cast<All_Model*>(master->clone());
+                fx[i] = m->fx_function_solve(malloc_size, x[i], false);
+                if (m) {
+                    delete m;
+                }
+                if (fx[i] < pbest[i]) {
+                    pbest[i] = fx[i];
+                    memcpy(xpbest[i], x[i], malloc_size);
+                }
+            }
+            minimum(l, gg, popsize, fx);
+            if (gbest > gg) {
+                gbest = gg;
+                memcpy(xgbest, x[l], malloc_size);
+            }
+
+            double c3 = c1 * ((double) rand() / (RAND_MAX));
+            double dd3 = c2 * ((double) rand() / (RAND_MAX));
+
+            for (int i = 0; i < popsize; i++) {
+                for (int j = 0; j < malloc_size; j++) {
+                    double oneadd = 0, zeroadd = 0;
+                    if (xpbest[i][j] == 0) {
+                        oneadd = oneadd - c3;
+                        zeroadd = zeroadd + c3;
+                    } else {
+                        oneadd = oneadd + c3;
+                        zeroadd = zeroadd - c3;
+                    }
+                    if (xgbest[j] == 0) {
+                        oneadd = oneadd - dd3;
+                        zeroadd = zeroadd + dd3;
+                    } else {
+                        oneadd = oneadd + dd3;
+                        zeroadd = zeroadd - dd3;
+                    }
+                    one_vel[i][j] = (w1 * one_vel[i][j]) + oneadd;
+                    zero_vel[i][j] = (w1 * zero_vel[i][j]) + zeroadd;
+                    if (fabs(vel[i][j]) > vmax) {
+                        zero_vel[i][j] = vmax * sign(zero_vel[i][j]);
+                        one_vel[i][j] = vmax * sign(one_vel[i][j]);
+                    }
+                    if (x[i][j] == 1) {
+                        vel[i][j] = zero_vel[i][j];
+                    } else {
+                        vel[i][j] = one_vel[i][j];
+                    }
+                    if (((double) rand() / (RAND_MAX)) < logsig(vel[i][j])) {
+                        x[i][j] = !x[i][j];
+                    } else {
+                        x[i][j] = x[i][j];
+                    }
+                }
+            }
+        }
+        if (Gbest1 > gbest) {
+            Gbest1 = gbest;
+        }
+        double temp = 0;
+        for (int i = 0; i < popsize; i++) {
+            temp += pbest[i];
+        }
+        temp /= popsize;
+        if (Pbest1 > temp) {
+            Pbest1 = temp;
+        }
     }
+    printf("%s : %lf\n", file_name, Gbest1);
+    
+    best_y = master->fx_function_solve_2(malloc_size, xgbest, true);
+    master->display();
 
     printf("Best Result: %lf\n", best_y);
 

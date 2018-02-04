@@ -23,7 +23,7 @@ build/test_2.o: test/test_2.cpp
 	$(CXX) $(CXXFLAGS) -I./include -c  test/test_2.cpp -o build/test_2.o
 	
 build/test_3: $(OBJECTS3)
-	$(CXX) $(OBJECTS2) -o build/test_3
+	$(CXX) $(OBJECTS3) -o build/test_3
 
 build/test_3.o: test/test_3.cpp
 	$(CXX) $(CXXFLAGS) -I./include -c  test/test_3.cpp -o build/test_3.o
