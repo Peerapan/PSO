@@ -484,6 +484,7 @@ double All_Model::fx_function_solve_2(int x_size, char* x, bool edited) {
     int front_num = (int) pow(2, res_ls_bit);
     int last_num = (int) pow(2, all_bit);
     for (int i = 0; i < res_ls_steps; i++) {
+        std::vector<TimeGraph*> temp_graph;
         int res_it = binary_2_decimal(res_ls_bit, x + start);
         start += res_ls_bit;
         int area_it = binary_2_decimal(all_bit, x + start);
@@ -494,34 +495,51 @@ double All_Model::fx_function_solve_2(int x_size, char* x, bool edited) {
         int a = pop_area_pool(des);
         int _x = cc_containers[r]->_w;
         int _y = cc_containers[r]->_l;
-        double duration = 0;
-        if (last_x != _x) {
-            duration = (abs(last_x - _x) * TRAVEL_TIME);
-            if (edited) ls_graph.push_back( new SlopeTimeGraph((int)y, (int)y+duration, last_x, _x) );
-            y += duration;
-            if (edited) printf("MOVE FROM %d, %d TO %d, %d (%lf -> %lf)\n", last_x, last_y, _x, _y, duration, y);
-            last_x = _x;
-            last_y = _y;
+        double t_y = y;
+        double t_duration_1 = 0;
+        double t_duration_2 = 0;
+        double t_duration_3 = 0;
+        double t_duration_4 = 0;
+        double shift = 0;
+        t_duration_1 = CONTROL_TIME;
+        {
+            TimeGraph* tg = new StableTimeGraph((int)t_y, (int)t_y+t_duration_1, W);
+            
+            delete tg;
         }
-        duration = CONTROL_TIME;
-        if (edited) ls_graph.push_back( new StableTimeGraph((int)y, (int)y+duration, _x) );
-        y += duration;
-        if (edited) printf("PICK %d (%lf -> %lf)\n", r + 1, duration, y);
-        duration = (abs(areas[a]->_w - cc_containers[r]->_w) * TRAVEL_TIME);
-        if (edited) ls_graph.push_back( new SlopeTimeGraph((int)y, (int)y+duration, _x, areas[a]->_w) );
-        y += duration;
-        if (edited) {
+        t_y += t_duration_1;
+        t_duration_2 = (abs(areas[a]->_w - _x) * TRAVEL_TIME);
+        {
+            TimeGraph* tg = new SlopeTimeGraph((int)t_y, (int)t_y+t_duration_2, _x, areas[a]->_w);
+        
+            delete tg;
+        }
+        t_y += t_duration_2;
+        t_duration_3 = CONTROL_TIME;
+        {
+            TimeGraph* tg = new StableTimeGraph((int)t_y, (int)t_y+t_duration_3, areas[a]->_w );
+        
+            delete tg;
+        }
+        t_y += t_duration_3;
+        t_duration_4 = (abs(areas[a]->_w - W) * TRAVEL_TIME);
+        {
+            TimeGraph* tg = new StableTimeGraph((int)t_y, (int)t_y+t_duration_4, areas[a]->_w, W );
+        
+            delete tg;
+        }
+        t_y += t_duration_4;
+        last_x = W;
+        last_y = L;
+        if (edited){
+            printf("PICK %d (%lf -> %lf)\n", r + 1, duration, t_y);
             printf("Move %d( %d, %d, %d ) to ( %d, %d, %d ) (%lf->%f)\n", r + 1,
                     cc_containers[r]->_h, cc_containers[r]->_w, cc_containers[r]->_l,
                     areas[a]->_h, areas[a]->_w, areas[a]->_l,
                     duration, y);
+            printf("DROP %d (%lf -> %lf)\n", r + 1, duration, t_y);
+            printf("Move %d( %d, %d, %d ) to LS\n");
         }
-        duration = CONTROL_TIME;
-        if (edited) ls_graph.push_back( new StableTimeGraph((int)y, (int)y+duration, areas[a]->_w ) );
-        y += duration;
-        if (edited) printf("DROP %d (%lf -> %lf)\n", r + 1, duration, y);
-        last_x = areas[a]->_w;
-        last_y = areas[a]->_l;
     }
 #ifdef DEBUG
     printf("IMP_LS: %d\n", imp_ls);
