@@ -2,6 +2,7 @@
 #define FUNCTION_H
 
 #include <map>
+#include <string>
 
 double sigmoid(double x);
 double logsig(double n);

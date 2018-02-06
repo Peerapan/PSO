@@ -57,7 +57,8 @@ private:
     int calculate_malloc_size();
 
     void find_res();
-    
+	int check_ss(TimeGraph* src, int& time_counter, int start_time);
+	
 public:
     All_Model();
     All_Model(const char*& input);
@@ -69,8 +70,9 @@ public:
     int pop_area_pool(int a);
     int pop_res_ss_pool(int a);
     int pop_res_ls_pool(int a);
-    
-    int check_ss(TimeGraph* src, int& time_counter, int start_time);
+	
+	int check_ss_slope(int& tc, int tt, int d, int a, int b);
+	int check_ss_stable(int& tc, int tt, int d, int _x);
     
     void ls_analyze();
     double fx_function_solve(int x_size, char* x, bool edited = false);
