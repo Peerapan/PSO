@@ -39,7 +39,7 @@ public:
 
 class SlopeTimeGraph : public TimeGraph{
 private:
-    int m;
+    double m;
 public:
     SlopeTimeGraph(){
     
@@ -49,10 +49,12 @@ public:
         max_x = _max_x;
         min_y = _min_y;
         max_y = _max_y;
-        m = (max_y - min_y) / (max_x - min_x);
     }
     int get_value(int x){
-        return m*x;
+		int ret = x;
+		ret *= (max_y - min_y);
+		ret /= (max_x - min_x);
+		return ret;
     }
 };
 

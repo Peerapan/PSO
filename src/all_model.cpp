@@ -343,7 +343,8 @@ double All_Model::fx_function_solve(int x_size, char* x, bool edited) {
         y += duration;
         duration = (abs(areas[a]->_w - cc_containers[r]->_w) * TRAVEL_TIME);
         if (edited) {
-            ss_graph.push_back( new SlopeTimeGraph((int)y, (int)y+duration, _x, areas[a]->_w) );
+			if(last_x != _x)
+            	ss_graph.push_back( new SlopeTimeGraph((int)y, (int)y+duration, _x, areas[a]->_w) );
             printf("Move %d( %d, %d, %d ) to ( %d, %d, %d ) (%lf + %lf -> %f)\n", r + 1,
                     cc_containers[r]->_h, cc_containers[r]->_w, cc_containers[r]->_l,
                     areas[a]->_h, areas[a]->_w, areas[a]->_l,
@@ -390,7 +391,7 @@ double All_Model::fx_function_solve(int x_size, char* x, bool edited) {
             if (last_x != -1) {
                 duration = ((last_x + 1) * TRAVEL_TIME);
                 if (edited) {
-                    ss_graph.push_back( new SlopeTimeGraph((int)y, (int)y+duration, last_x, -1) );
+					ss_graph.push_back( new SlopeTimeGraph((int)y, (int)y+duration, last_x, -1) );
                     printf("IMP MOVE FROM %d, %d TO SS (%lf + %lf -> %lf)\n", last_x, last_y, y, duration, y + duration);
                 }
                 y += duration;
@@ -405,7 +406,7 @@ double All_Model::fx_function_solve(int x_size, char* x, bool edited) {
             y += duration;
             duration = ((areas[a]->_w + 1) * TRAVEL_TIME);
             if (edited) {
-                ss_graph.push_back( new SlopeTimeGraph((int)y, (int)y+duration, -1, areas[a]->_w) );
+				ss_graph.push_back( new SlopeTimeGraph((int)y, (int)y+duration, -1, areas[a]->_w) );
                 printf("IMP MOVE IMP-%d TO %d (%d, %d, %d) (%lf + %lf -> %lf)\n",
                     r + 1, a + 1, areas[a]->_h, areas[a]->_w, areas[a]->_l, 
                     y, duration, y + duration);
@@ -430,7 +431,8 @@ double All_Model::fx_function_solve(int x_size, char* x, bool edited) {
             double duration = 0;
             duration = (abs(cc_containers[r]->_w - last_x) * TRAVEL_TIME);
             if (edited) {
-                ss_graph.push_back( new SlopeTimeGraph((int)y, (int)y+duration, last_x, cc_containers[r]->_w) );
+				if(last_x != cc_containers[r]->_w)
+                	ss_graph.push_back( new SlopeTimeGraph((int)y, (int)y+duration, last_x, cc_containers[r]->_w) );
                 printf("EXP MOVE FROM %d, %d TO %d (%d, %d, %d) (%lf + %lf -> %lf)\n",
                     last_x, last_y, r + 1, cc_containers[r]->_h, cc_containers[r]->_w, cc_containers[r]->_l, y, duration, y + duration);
             }
@@ -443,7 +445,7 @@ double All_Model::fx_function_solve(int x_size, char* x, bool edited) {
             y += duration;
             duration = ((cc_containers[r]->_w + 1) * TRAVEL_TIME);
             if (edited) {
-                ss_graph.push_back( new SlopeTimeGraph((int)y, (int)y+duration, cc_containers[r]->_w, -1) );
+				ss_graph.push_back( new SlopeTimeGraph((int)y, (int)y+duration, cc_containers[r]->_w, -1) );
                 printf("EXP MOVE %d (%d, %d, %d) TO SS (%lf + %lf -> %lf)\n",
                     r + 1, cc_containers[r]->_h, cc_containers[r]->_w, cc_containers[r]->_l, y, duration, y + duration);
                 mark[cc_containers[r]->_w][cc_containers[r]->_l] = true;
@@ -518,9 +520,11 @@ double All_Model::fx_function_solve_2(int x_size, char* x, bool edited) {
         t_y += t_duration_1;
         
         t_duration_2 = (abs(areas[a]->_w - _x) * TRAVEL_TIME);
-		shift = (double)check_ss_slope(time_counter, (int)t_y, (int)t_duration_2, _x, areas[a]->_w);
-        total_shift += shift;
-        t_y += shift;
+		if(t_duration_2 > 0){
+			shift = (double)check_ss_slope(time_counter, (int)t_y, (int)t_duration_2, _x, areas[a]->_w);
+			total_shift += shift;
+			t_y += shift;
+		}
         t_y += t_duration_2;
         
         t_duration_3 = CONTROL_TIME;
@@ -718,13 +722,13 @@ void All_Model::display() {
     for (auto& it : cc_containers) {
         printf("%d: %d %d %d\n", it.first, it.second->_h, it.second->_w, it.second->_l);
     }
-    printf("----- GRAPH -----\n");
-    for(auto& it : ss_graph){
-        printf("%s\n", it->toString().c_str());
-    }
-    for(auto& it : ls_graph){
-        printf("%s\n", it->toString().c_str());
-    }
+//    printf("----- GRAPH -----\n");
+//    for(auto& it : ss_graph){
+//        printf("%s\n", it->toString().c_str());
+//    }
+//    for(auto& it : ls_graph){
+//        printf("%s\n", it->toString().c_str());
+//    }
     if(mark.size() > 0){
         printf("----- MARK -----\n");
         for(int i=0; i<W; i++){
@@ -769,6 +773,7 @@ int All_Model::check_ss(TimeGraph* src, int& time_counter, int start_time){
             j++;
         }
         if(ss_graph[time_counter]->outer(i+shifter)) time_counter++;
+		if(src->outer(j)) break;
     }
     return shifter;
 }
