@@ -39,7 +39,7 @@ int main(int argc, char** argv) {
             i++;
         }
         if(ls_arr[ls].outer(i)) ls++;
-        if(ss_arr[ss].outer(i+c)) ls++;
+        if(ss_arr[ss].outer(i+c)) ss++;
     }
     printf("%d\n", c);
     

@@ -473,6 +473,8 @@ double All_Model::fx_function_solve(int x_size, char* x, bool edited) {
 }
 
 double All_Model::fx_function_solve_2(int x_size, char* x, bool edited) {
+    int time_counter = 0;
+    
     double y = 0;
     int start = 0;
     int all = W*L;
@@ -496,49 +498,92 @@ double All_Model::fx_function_solve_2(int x_size, char* x, bool edited) {
         int _x = cc_containers[r]->_w;
         int _y = cc_containers[r]->_l;
         double t_y = y;
+        double t_duration_0 = 0;
         double t_duration_1 = 0;
         double t_duration_2 = 0;
         double t_duration_3 = 0;
         double t_duration_4 = 0;
-        double shift = 0;
-        t_duration_1 = CONTROL_TIME;
+        double shift = 0, total_shift = 0;
+        
+        t_duration_0 = (abs(W - _x) * TRAVEL_TIME);
         {
-            TimeGraph* tg = new StableTimeGraph((int)t_y, (int)t_y+t_duration_1, W);
-            
+            TimeGraph* tg = new SlopeTimeGraph((int)t_y, (int)(t_y + t_duration_0), W, _x);
+            shift = (double)check_ss(tg, time_counter, (int)t_y);
             delete tg;
         }
+        total_shift += shift;
+        t_y += shift;
+        t_y += t_duration_0;
+        
+        t_duration_1 = CONTROL_TIME;
+        {
+            TimeGraph* tg = new StableTimeGraph((int)t_y, (int)t_y+t_duration_1, _x);
+            shift = (double)check_ss(tg, time_counter, (int)t_y);
+            delete tg;
+        }
+        total_shift += shift;
+        t_y += shift;
         t_y += t_duration_1;
+        
         t_duration_2 = (abs(areas[a]->_w - _x) * TRAVEL_TIME);
         {
             TimeGraph* tg = new SlopeTimeGraph((int)t_y, (int)t_y+t_duration_2, _x, areas[a]->_w);
-        
+            shift = (double)check_ss(tg, time_counter, (int)t_y);
             delete tg;
         }
+        total_shift += shift;
+        t_y += shift;
         t_y += t_duration_2;
+        
         t_duration_3 = CONTROL_TIME;
         {
             TimeGraph* tg = new StableTimeGraph((int)t_y, (int)t_y+t_duration_3, areas[a]->_w );
-        
+            shift = (double)check_ss(tg, time_counter, (int)t_y);
             delete tg;
         }
+        total_shift += shift;
+        t_y += shift;
         t_y += t_duration_3;
+        
         t_duration_4 = (abs(areas[a]->_w - W) * TRAVEL_TIME);
         {
-            TimeGraph* tg = new StableTimeGraph((int)t_y, (int)t_y+t_duration_4, areas[a]->_w, W );
-        
+            TimeGraph* tg = new SlopeTimeGraph((int)t_y, (int)t_y+t_duration_4, areas[a]->_w, W );
+            shift = (double)check_ss(tg, time_counter, (int)t_y);
             delete tg;
         }
+        total_shift += shift;
+        t_y += shift;
         t_y += t_duration_4;
+        
         last_x = W;
         last_y = L;
         if (edited){
-            printf("PICK %d (%lf -> %lf)\n", r + 1, duration, t_y);
-            printf("Move %d( %d, %d, %d ) to ( %d, %d, %d ) (%lf->%f)\n", r + 1,
+            printf("WAIT %f + %f -> %f\n", y, total_shift, y + total_shift);
+            y += total_shift;
+            printf("MOVE FROM LS TO %d, %d (%lf + %lf -> %lf)\n", _x, _y, 
+                    y, t_duration_0, y + t_duration_0);
+            y += t_duration_0;
+            printf("PICK %d (%lf + %lf -> %lf)\n", r + 1, y, t_duration_1, y + t_duration_1);
+            y += t_duration_1;
+            printf("Move %d( %d, %d, %d ) to ( %d, %d, %d ) (%lf +%lf -> %f)\n", r + 1,
                     cc_containers[r]->_h, cc_containers[r]->_w, cc_containers[r]->_l,
                     areas[a]->_h, areas[a]->_w, areas[a]->_l,
-                    duration, y);
-            printf("DROP %d (%lf -> %lf)\n", r + 1, duration, t_y);
-            printf("Move %d( %d, %d, %d ) to LS\n");
+                    y, t_duration_2, y + t_duration_2);
+            y += t_duration_2;
+            printf("DROP %d (%lf + %lf -> %lf)\n", r + 1, 
+                    y, t_duration_3, y + t_duration_3);
+            y += t_duration_3;
+            printf("Move ( %d, %d, %d ) to LS (%lf + %lf -> %lf)\n",
+                    areas[a]->_h, areas[a]->_w, areas[a]->_l,
+                    y, t_duration_4, y + t_duration_4);
+            y += t_duration_4;
+        }else{
+            y += total_shift;
+            y += t_duration_0;
+            y += t_duration_1;
+            y += t_duration_2;
+            y += t_duration_3;
+            y += t_duration_4;
         }
     }
 #ifdef DEBUG
@@ -551,6 +596,14 @@ double All_Model::fx_function_solve_2(int x_size, char* x, bool edited) {
     last_num = (int) pow(2, last_bit);
     int total_ls_steps = imp_ls_steps + exp_ls_steps;
     for (int i = 0; i < total_ls_steps; i++) {
+        double t_y = y;
+        double t_duration_0 = 0;
+        double t_duration_1 = 0;
+        double t_duration_2 = 0;
+        double t_duration_3 = 0;
+        double t_duration_4 = 0;
+        double shift = 0, total_shift = 0;
+        
         int it, area_it;
         char opd = x[start++];
         it = binary_2_decimal(front_bit, x + start);
@@ -563,26 +616,24 @@ double All_Model::fx_function_solve_2(int x_size, char* x, bool edited) {
             int a = pop_area_pool(idx_a);
             int idx_r = adjust(it, front_num - 1, imp_ls_pool.size() - 1);
             int r = pop_pool(imp_ls_pool, idx_r);
-            double duration = 0;
-            if (last_x != W) {
-                duration = (abs(last_x - W) * TRAVEL_TIME);
-                y += duration;
-                if (edited) printf("IMP MOVE FROM %d, %d TO LS (%lf -> %lf)\n", last_x, last_y, duration, y);
-                last_x = W;
-                last_y = W;
+            t_duration_0 = CONTROL_TIME;
+            y += t_duration_0;
+            t_duration_1 = (abs(areas[a]->_w - W) * TRAVEL_TIME);
+            y += t_duration_1;
+            t_duration_2 = CONTROL_TIME;
+            y += t_duration_2;
+            t_duration_3 = (abs(last_x - W) * TRAVEL_TIME);
+            y += t_duration_3;
+            last_x = W;
+            last_y = W;
+            if(edited){
+//                printf("PICK IMP-%d (%lf -> %lf)\n", r + 1, duration, y);
+//                printf("IMP MOVE IMP-%d TO %d (%d, %d, %d) (%lf -> %lf)\n",
+//                    r + 1, a + 1, areas[a]->_h, areas[a]->_w, areas[a]->_l, duration, y);
+//                printf("DROP IMP-%d (%lf -> %lf)\n", r + 1, duration, y);
+            }else{
+            
             }
-            duration = CONTROL_TIME;
-            y += duration;
-            if (edited) printf("PICK IMP-%d (%lf -> %lf)\n", r + 1, duration, y);
-            duration = (abs(areas[a]->_w - W) * TRAVEL_TIME);
-            y += duration;
-            if (edited) printf("IMP MOVE IMP-%d TO %d (%d, %d, %d) (%lf -> %lf)\n",
-                    r + 1, a + 1, areas[a]->_h, areas[a]->_w, areas[a]->_l, duration, y);
-            duration = CONTROL_TIME;
-            y += duration;
-            if (edited) printf("DROP IMP-%d (%lf -> %lf)\n", r + 1, duration, y);
-            last_x = areas[a]->_w;
-            last_y = areas[a]->_l;
         } else {
             //! EXPORT
             int idx_r = adjust(it, front_num - 1, exp_ls_pool.size() - 1);
@@ -604,6 +655,11 @@ double All_Model::fx_function_solve_2(int x_size, char* x, bool edited) {
             if (edited) printf("DROP %d (%lf -> %lf)\n", r + 1, duration, y);
             last_x = W;
             last_y = W;
+            if(edited){
+            
+            }else{
+            
+            }
         }
     }
     if (last_x != W && last_y != W) {
@@ -642,4 +698,21 @@ void All_Model::display() {
         printf("%d, %d, %d\n", areas[it]->_h, areas[it]->_w, areas[it]->_l);
     }
     printf("===============================================\n");
+}
+
+int All_Model::check_ss(TimeGraph* src, int& time_counter, int start_time){
+    int shifter = 0;
+    int i = start_time;
+    int j = start_time;
+    while(time_counter < ss_graph.size()){
+        bool ret = TimeGraph::compare(*ss_graph[time_counter], *src, i+shifter, j);
+        if(ret){
+            shifter++;
+        }else{
+            i++;
+            j++;
+        }
+        if(ss_graph[time_counter]->outer(i+shifter)) time_counter++;
+    }
+    return shifter;
 }

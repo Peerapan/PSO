@@ -70,6 +70,8 @@ public:
     int pop_res_ss_pool(int a);
     int pop_res_ls_pool(int a);
     
+    int check_ss(TimeGraph* src, int& time_counter, int start_time);
+    
     void ls_analyze();
     double fx_function_solve(int x_size, char* x, bool edited = false);
     double fx_function_solve_2(int x_size, char* x, bool edited = false);
