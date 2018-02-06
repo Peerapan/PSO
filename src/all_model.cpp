@@ -177,7 +177,8 @@ int All_Model::calculate_malloc_size() {
     res_ss_bits = (decimal_2_binary_size(res_ss_steps) + decimal_2_binary_size(all)) * res_ss_steps;
     res_ls_steps = res_ls.size();
     res_ls_bits = (decimal_2_binary_size(res_ls_steps) + decimal_2_binary_size(all)) * res_ls_steps;
-    
+	
+	sbit = 0;
     sbit += res_ss_bits;
     imp_ss_steps = imp_ss;
     exp_ss_steps = exp_ss.size();
@@ -185,9 +186,20 @@ int All_Model::calculate_malloc_size() {
     total_ss_steps = imp_ss_steps + exp_ss_steps;
     ss_bits = (1 + decimal_2_binary_size(max_ss_steps) + decimal_2_binary_size(all)) * (total_ss_steps);
     sbit += ss_bits;
-
-    allocate_size = sbit;
-    return allocate_size;
+    ss_allocate_size = sbit;
+	
+	sbit = 0;
+	sbit += res_ls_bits;
+	imp_ls_steps = imp_ls;
+	exp_ls_steps = exp_ls.size();
+	max_ls_steps = std::max(imp_ls_steps, exp_ls_steps);
+	total_ss_steps = imp_ls_steps + exp_ls_steps;
+	ss_bits = (1 + decimal_2_binary_size(max_ls_steps) + decimal_2_binary_size(all)) * (total_ls_steps);
+	sbit += ss_bits;
+	ls_allocate_size = sbit;
+	
+	allocate_size = ss_allocate_size > ls_allocate_size ? ss_allocate_size : ls_allocate_size;
+	return allocate_size;
 }
 
 All_Model* All_Model::clone() {
@@ -765,7 +777,7 @@ int All_Model::check_ss(TimeGraph* src, int& time_counter, int start_time){
     int i = start_time;
     int j = start_time;
     while(time_counter < ss_graph.size()){
-        bool ret = TimeGraph::compare(*ss_graph[time_counter], *src, i+shifter, j);
+        bool ret = TimeGraph::compare(ss_graph[time_counter], src, i+shifter, j);
         if(ret){
             shifter++;
         }else{

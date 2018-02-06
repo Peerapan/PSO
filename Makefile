@@ -8,7 +8,7 @@ OBJECTS2 := build/function.o build/model.o build/ss_model.o build/test_2.o
 OBJECTS3 := build/function.o build/model.o build/all_model.o build/test_3.o
 OBJECTS_GRAPH := test/test_graph.cpp
 
-all: build/test_1 build/test_2 build/test_3 build/test_graph
+all: build/test_3
 
 build/test_1: $(OBJECTS)
 	$(CXX) $(OBJECTS) -o build/test_1

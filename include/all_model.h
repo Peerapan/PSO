@@ -9,8 +9,12 @@ class TimeGraph;
 class All_Model : Model {
 private:
     int W, H, L;
-    int allocate_size;
-    int imp_ss, imp_ls;
+	
+	int allocate_size;
+	int ss_allocate_size;
+	int ls_allocate_size;
+	
+	int imp_ss, imp_ls;
     int res_ss_steps;
     int res_ls_steps;
     int imp_ss_steps;
@@ -65,7 +69,7 @@ public:
     
     ~All_Model();
     All_Model* clone();
-    
+	
     int pop_pool(std::vector<int>& pool, int idx);
     int pop_area_pool(int a);
     int pop_res_ss_pool(int a);

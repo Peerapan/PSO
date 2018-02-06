@@ -13,18 +13,16 @@ public:
     TimeGraph(){
     
     }
-    ~TimeGraph(){
+    virtual ~TimeGraph(){
     
     }
     //By default
-     virtual int get_value(int x){
-         return 0;
-    }
+	virtual int get_value(int x) = 0;
     bool outer(int x){
         return x > max_x;
     }
-    static bool compare(TimeGraph a, TimeGraph b, int i, int j){
-        if(a.get_value(i) == b.get_value(j)){
+    static bool compare(TimeGraph* a, TimeGraph* b, int i, int j){
+        if(a->get_value(i) == b->get_value(j)){
                 return true;
         }
         return false;
@@ -51,10 +49,10 @@ public:
         max_y = _max_y;
     }
     int get_value(int x){
-		int ret = x;
-		ret *= (max_y - min_y);
-		ret /= (max_x - min_x);
-		return ret;
+		double ret = (double)x;
+		ret *= (double)(max_y - min_y);
+		ret /= (double)(max_x - min_x);
+		return (int)floor(ret);
     }
 };
 
