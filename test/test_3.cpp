@@ -181,7 +181,7 @@ int main(int argc, const char** argv) {
             double w = 0.5;
             for (int i = 0; i < popsize; i++) {
                 All_Model* m = static_cast<All_Model*>(master->clone());
-                fx[i] = m->fx_function_solve(malloc_size, x[i], false);
+                fx[i] = m->fx_function_solve_2(malloc_size, x[i], false);
                 if (m) {
                     delete m;
                 }
