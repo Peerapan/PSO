@@ -11,7 +11,7 @@ bool TimeGraph::outer(int x) {
 }
 
 bool TimeGraph::compare(TimeGraph* a, TimeGraph* b, int i, int j) {
-    if (a->get_value(i) <= b->get_value(j)) {
+    if (a->get_value(i) >= b->get_value(j)) {
         return true;
     }
     return false;
