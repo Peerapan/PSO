@@ -9,12 +9,12 @@ class TimeGraph;
 class All_Model : Model {
 private:
     int W, H, L;
-	
-	int allocate_size;
-	int ss_allocate_size;
-	int ls_allocate_size;
-	
-	int imp_ss, imp_ls;
+
+    int allocate_size = 0;
+    int ss_allocate_size = 0;
+    int ls_allocate_size = 0;
+
+    int imp_ss, imp_ls;
     int res_ss_steps;
     int res_ls_steps;
     int imp_ss_steps;
@@ -35,7 +35,7 @@ private:
     std::set<int> res_ls;
     std::set<int> exp_ss;
     std::set<int> exp_ls;
-    
+
     int last_cc_container;
     std::map<int, dat*> cc_containers;
     std::map<int, dat*> areas;
@@ -52,7 +52,7 @@ private:
 
     std::vector<TimeGraph*> ss_graph;
     std::vector<TimeGraph*> ls_graph;
-    
+
     const static int TRAVEL_TIME = 2;
     const static int CONTROL_TIME = 10;
 
@@ -61,23 +61,23 @@ private:
     int calculate_malloc_size();
 
     void find_res();
-	int check_ss(TimeGraph* src, int& time_counter, int start_time);
-	
+    int check_ss(TimeGraph* src, int& time_counter, int start_time);
+
 public:
     All_Model();
     All_Model(const char*& input);
-    
+
     ~All_Model();
     All_Model* clone();
-	
+
     int pop_pool(std::vector<int>& pool, int idx);
     int pop_area_pool(int a);
     int pop_res_ss_pool(int a);
     int pop_res_ls_pool(int a);
-	
-	int check_ss_slope(int& tc, int tt, int d, int a, int b);
-	int check_ss_stable(int& tc, int tt, int d, int _x);
-    
+
+    int check_ss_slope(int& tc, int tt, int d, int a, int b);
+    int check_ss_stable(int& tc, int tt, int d, int _x);
+
     void ls_analyze();
     double fx_function_solve(int x_size, char* x, bool edited = false);
     double fx_function_solve_2(int x_size, char* x, bool edited = false);

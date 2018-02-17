@@ -2,11 +2,15 @@
 <configurationDescriptor version="100">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
     <df root="." name="0">
+      <df name="data">
+        <in>example_small_all_data_03.txt</in>
+      </df>
       <df name="include">
         <in>linear_graph.h</in>
       </df>
       <df name="src">
         <in>function.cpp</in>
+        <in>linear_graph.cpp</in>
         <in>model.cpp</in>
         <in>ss_model.cpp</in>
       </df>
@@ -54,6 +58,8 @@
           <preBuildCommand></preBuildCommand>
         </preBuild>
       </makefileType>
+      <item path="data/example_small_all_data_03.txt" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="include/linear_graph.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="src/function.cpp" ex="false" tool="1" flavor2="11">
@@ -63,6 +69,8 @@
             <pElem>.</pElem>
           </incDir>
         </ccTool>
+      </item>
+      <item path="src/linear_graph.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="src/model.cpp" ex="false" tool="1" flavor2="11">
         <ccTool flags="0">

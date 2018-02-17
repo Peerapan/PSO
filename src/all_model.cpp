@@ -16,7 +16,6 @@
 #include "linear_graph.h"
 
 All_Model::All_Model() {
-
 }
 
 All_Model::All_Model(const char*& input) {
@@ -41,13 +40,17 @@ All_Model::~All_Model() {
     for (auto it : ss_graph) {
         if (it) {
             delete it;
+            it = NULL;
         }
     }
+    ss_graph.clear();
     for (auto it : ls_graph) {
         if (it) {
             delete it;
+            it = NULL;
         }
     }
+    ls_graph.clear();
 }
 
 void All_Model::load_data(const char* file) {
@@ -191,12 +194,16 @@ int All_Model::calculate_malloc_size() {
     imp_ls_steps = imp_ls;
     exp_ls_steps = exp_ls.size();
     max_ls_steps = std::max(imp_ls_steps, exp_ls_steps);
-    total_ss_steps = imp_ls_steps + exp_ls_steps;
+    total_ls_steps = imp_ls_steps + exp_ls_steps;
     ss_bits = (1 + decimal_2_binary_size(max_ls_steps) + decimal_2_binary_size(all)) * (total_ls_steps);
     sbit += ss_bits;
     ls_allocate_size = sbit;
 
-    allocate_size = ss_allocate_size > ls_allocate_size ? ss_allocate_size : ls_allocate_size;
+    if( ss_allocate_size > ls_allocate_size ){
+        allocate_size = ss_allocate_size;
+    }else{
+        allocate_size = ls_allocate_size;
+    }
     return allocate_size;
 }
 
@@ -212,6 +219,8 @@ All_Model* All_Model::clone() {
         m->table[i].resize(L);
     }
 
+    m->last_cc_container = last_cc_container;
+    
     for (auto& it : this->cc_containers) {
         int i = it.first;
         dat* _a = new dat(it.second->_h, it.second->_w, it.second->_l);
@@ -240,6 +249,14 @@ All_Model* All_Model::clone() {
     m->analyze();
     m->calculate_malloc_size();
 
+    for(auto& it : this->ss_graph){
+        m->ss_graph.push_back( it->clone() );
+    }
+    
+    for(auto& it : this->ls_graph){
+        m->ls_graph.push_back( it->clone() );
+    }
+    
     return m;
 }
 
@@ -335,7 +352,7 @@ double All_Model::fx_function_solve(int x_size, char* x, bool edited) {
         int _x = cc_containers[r]->_w;
         int _y = cc_containers[r]->_l;
         double duration = 0;
-        if (last_x != _x) {
+        if (last_x != _x && last_y != _y) {
             duration = (abs(last_x - _x) * TRAVEL_TIME);
             if (edited) {
                 ss_graph.push_back(new SlopeTimeGraph((int) y, (int) y + duration, last_x, _x));
@@ -352,19 +369,20 @@ double All_Model::fx_function_solve(int x_size, char* x, bool edited) {
         }
         y += duration;
         duration = (abs(areas[a]->_w - cc_containers[r]->_w) * TRAVEL_TIME);
-        if (edited) {
-            if (last_x != _x)
-                ss_graph.push_back(new SlopeTimeGraph((int) y, (int) y + duration, _x, areas[a]->_w));
+         if (edited){
+            ss_graph.push_back(new SlopeTimeGraph((int) y, (int) y + duration, _x, areas[a]->_w));
             printf("Move %d( %d, %d, %d ) to ( %d, %d, %d ) (%lf + %lf -> %f)\n", r + 1,
-                    cc_containers[r]->_h, cc_containers[r]->_w, cc_containers[r]->_l,
-                    areas[a]->_h, areas[a]->_w, areas[a]->_l,
-                    y, duration, y + duration);
+                cc_containers[r]->_h, cc_containers[r]->_w, cc_containers[r]->_l,
+                areas[a]->_h, areas[a]->_w, areas[a]->_l,
+                y, duration, y + duration);
+        }
+        if(edited){
             mark[cc_containers[r]->_w][cc_containers[r]->_l] = true;
             mark[areas[a]->_w][areas[a]->_l] = true;
-            cc_containers[r]->_h = areas[a]->_h;
-            cc_containers[r]->_w = areas[a]->_w;
-            cc_containers[r]->_l = areas[a]->_l;
         }
+        cc_containers[r]->_h = areas[a]->_h;
+        cc_containers[r]->_w = areas[a]->_w;
+        cc_containers[r]->_l = areas[a]->_l;
         y += duration;
         duration = CONTROL_TIME;
         if (edited) {
@@ -405,8 +423,6 @@ double All_Model::fx_function_solve(int x_size, char* x, bool edited) {
                     printf("IMP MOVE FROM %d, %d TO SS (%lf + %lf -> %lf)\n", last_x, last_y, y, duration, y + duration);
                 }
                 y += duration;
-                last_x = -1;
-                last_y = -1;
             }
             duration = CONTROL_TIME;
             if (edited) {
@@ -439,14 +455,15 @@ double All_Model::fx_function_solve(int x_size, char* x, bool edited) {
             int idx_r = adjust(it, front_num - 1, exp_ss_pool.size() - 1);
             int r = pop_pool(exp_ss_pool, idx_r);
             double duration = 0;
-            duration = (abs(cc_containers[r]->_w - last_x) * TRAVEL_TIME);
-            if (edited) {
-                if (last_x != cc_containers[r]->_w)
+            if (last_x != cc_containers[r]->_w && last_y != cc_containers[r]->_l){
+                duration = (abs(cc_containers[r]->_w - last_x) * TRAVEL_TIME);
+                 if (edited){
                     ss_graph.push_back(new SlopeTimeGraph((int) y, (int) y + duration, last_x, cc_containers[r]->_w));
-                printf("EXP MOVE FROM %d, %d TO %d (%d, %d, %d) (%lf + %lf -> %lf)\n",
-                        last_x, last_y, r + 1, cc_containers[r]->_h, cc_containers[r]->_w, cc_containers[r]->_l, y, duration, y + duration);
+                    printf("EXP MOVE FROM %d, %d TO %d (%d, %d, %d) (%lf + %lf -> %lf)\n",
+                            last_x, last_y, r + 1, cc_containers[r]->_h, cc_containers[r]->_w, cc_containers[r]->_l, y, duration, y + duration);
+                 }
+                y += duration;
             }
-            y += duration;
             duration = CONTROL_TIME;
             if (edited) {
                 ss_graph.push_back(new StableTimeGraph((int) y, (int) y + duration, cc_containers[r]->_w));
@@ -745,6 +762,14 @@ void All_Model::display() {
     printf("----- AREA POOL -----\n");
     for (auto& it : area_pool) {
         printf("%d, %d, %d\n", areas[it]->_h, areas[it]->_w, areas[it]->_l);
+    }
+    printf("----- GRAPH -----\n");
+    for(int i=0; i<ss_graph.size(); i++){
+        if(ss_graph[i]->get_type() == 1){
+            static_cast<SlopeTimeGraph*>(ss_graph[i])->display();
+        }else{
+            static_cast<StableTimeGraph*>(ss_graph[i])->display();
+        }
     }
     printf("===============================================\n");
 }

@@ -5,6 +5,7 @@
       <df name="build">
       </df>
       <df name="data">
+        <in>example_small_all_data_03.txt</in>
       </df>
       <df name="include">
         <in>all_model.h</in>
@@ -19,6 +20,7 @@
       <df name="src">
         <in>all_model.cpp</in>
         <in>function.cpp</in>
+        <in>linear_graph.cpp</in>
         <in>model.cpp</in>
         <in>ss_model.cpp</in>
       </df>

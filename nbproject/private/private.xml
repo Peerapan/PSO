@@ -12,7 +12,9 @@
         <group>
             <file>file:/home/peerapan/Documents/PSO/data/example_data_small_01.txt</file>
             <file>file:/home/peerapan/Documents/PSO/data/example_data_all_small_01.txt</file>
-            <file>file:/home/peerapan/Documents/PSO/test/test_graph.cpp</file>
+            <file>file:/home/peerapan/Documents/PSO/include/linear_graph.h</file>
+            <file>file:/home/peerapan/Documents/PSO/test/test_3.cpp</file>
+            <file>file:/home/peerapan/Documents/PSO/src/all_model.cpp</file>
         </group>
     </open-files>
 </project-private>
