@@ -352,7 +352,7 @@ double All_Model::fx_function_solve(int x_size, char* x, bool edited) {
         int _x = cc_containers[r]->_w;
         int _y = cc_containers[r]->_l;
         double duration = 0;
-        if (last_x != _x && last_y != _y) {
+        if (last_x != _x || last_y != _y) {
             duration = (abs(last_x - _x) * TRAVEL_TIME);
             if (edited) {
                 ss_graph.push_back(new SlopeTimeGraph((int) y, (int) y + duration, last_x, _x));
@@ -491,7 +491,7 @@ double All_Model::fx_function_solve(int x_size, char* x, bool edited) {
             last_y = -1;
         }
     }
-    if (last_x != -1 && last_y != -1) {
+    if (last_x != -1 || last_y != -1) {
         double duration = (last_x + 1) * TRAVEL_TIME;
         if (edited) {
             ss_graph.push_back(new SlopeTimeGraph((int) y, (int) y + duration, last_x, -1));
