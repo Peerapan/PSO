@@ -51,7 +51,7 @@ int SlopeTimeGraph::get_type() {
 int SlopeTimeGraph::get_value(int x) {
     if( x_diff == 0 ) return min_y;
     x -= min_x;
-    x /= 2;
+    x /= const_travel_time;
     x *= y_diff;
     x /= x_diff;
     return x + min_y;
