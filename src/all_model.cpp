@@ -455,7 +455,7 @@ double All_Model::fx_function_solve(int x_size, char* x, bool edited) {
             int idx_r = adjust(it, front_num - 1, exp_ss_pool.size() - 1);
             int r = pop_pool(exp_ss_pool, idx_r);
             double duration = 0;
-            if (last_x != cc_containers[r]->_w && last_y != cc_containers[r]->_l){
+            if (last_x != cc_containers[r]->_w || last_y != cc_containers[r]->_l){
                 duration = (abs(cc_containers[r]->_w - last_x) * TRAVEL_TIME);
                  if (edited){
                     ss_graph.push_back(new SlopeTimeGraph((int) y, (int) y + duration, last_x, cc_containers[r]->_w));
