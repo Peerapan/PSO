@@ -561,7 +561,7 @@ double All_Model::fx_function_solve_2(int x_size, char* x, bool edited) {
         t_y += t_duration_3;
 
         t_duration_4 = (abs(areas[a]->_w - W) * TRAVEL_TIME);
-        shift = (double) check_ss_slope(time_counter, (int) t_y, (int) t_duration_2, areas[a]->_w, W);
+        shift = (double) check_ss_slope(time_counter, (int) t_y, (int) t_duration_4, areas[a]->_w, W);
         total_shift += shift;
         t_y += shift;
         t_y += t_duration_4;
