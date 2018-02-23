@@ -77,6 +77,7 @@ public:
 
     int check_ss_slope(int& tc, int tt, int d, int a, int b);
     int check_ss_stable(int& tc, int tt, int d, int _x);
+    int check_ss(std::vector<TimeGraph*>& src, int& _time_counter, int start_time);
 
     void ls_analyze();
     double fx_function_solve(int x_size, char* x, bool edited = false);
