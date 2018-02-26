@@ -856,10 +856,10 @@ int All_Model::check_ss(TimeGraph* src, int& time_counter, int start_time) {
     while (time_counter < ss_graph.size()) {
         bool ret = TimeGraph::compare(ss_graph[time_counter], src, i + shifter, j);
         if (ret) {
-            shifter += TRAVEL_TIME;
+            shifter++;
         } else {
-            i += TRAVEL_TIME;
-            j += TRAVEL_TIME;
+            i++;
+            j++;
         }
         if (ss_graph[time_counter]->outer(i + shifter)) time_counter++;
         if (src->outer(j)) break;
