@@ -13,10 +13,10 @@
 
 int main(int argc, const char** argv) {
     const char* file_name = argv[1];
-    
+
     std::map<std::string, double> configs;
     read_configs(configs);
-    
+
     All_Model* master = new All_Model(file_name);
     int malloc_size = master->get_bit_size();
 
@@ -146,7 +146,7 @@ int main(int argc, const char** argv) {
     double best_y = master->fx_function_solve(malloc_size, xgbest, true);
     master->display();
     master->ls_analyze();
-    
+
     for (int tt = 0; tt < 10; tt++) {
         for (int i = 0; i < popsize; i++) {
             for (int j = 0; j < malloc_size; j++) {
@@ -159,7 +159,7 @@ int main(int argc, const char** argv) {
 
         for (int i = 0; i < popsize; i++) {
             All_Model* m = static_cast<All_Model*>(master->clone());
-            pbest[i] = fx[i] = m->fx_function_solve(malloc_size, x[i], false);
+            pbest[i] = fx[i] = m->fx_function_solve_2(malloc_size, x[i], false);
             if (m)
                 delete m;
         }
@@ -248,7 +248,7 @@ int main(int argc, const char** argv) {
         }
     }
     printf("%s : %lf\n", file_name, Gbest1);
-    
+
     best_y = master->fx_function_solve_2(malloc_size, xgbest, true);
     master->display();
 

@@ -220,7 +220,7 @@ All_Model* All_Model::clone() {
     }
 
     m->last_cc_container = last_cc_container;
-    
+
     for (auto& it : this->cc_containers) {
         int i = it.first;
         dat* _a = new dat(it.second->_h, it.second->_w, it.second->_l);
@@ -252,11 +252,11 @@ All_Model* All_Model::clone() {
     for(auto& it : this->ss_graph){
         m->ss_graph.push_back( it->clone() );
     }
-    
+
     for(auto& it : this->ls_graph){
         m->ls_graph.push_back( it->clone() );
     }
-    
+
     return m;
 }
 
@@ -267,7 +267,7 @@ int All_Model::pop_area_pool(int idx) {
         areas[n] = new dat(areas[a]->_h + 1, areas[a]->_w, areas[a]->_l);
         area_pool[idx] = n;
     } else {
-        area_pool[idx] = area_pool[area_pool.size() - 1];
+        if(area_pool.size() > 0) area_pool[idx] = area_pool[area_pool.size() - 1];
         area_pool.pop_back();
     }
     return a;
@@ -279,7 +279,7 @@ int All_Model::pop_res_ss_pool(int idx) {
     if (cc_containers[r]->_h - 1 >= 0 && res_ss.find(nt) != res_ss.end()) {
         res_ss_pool[idx] = nt;
     } else {
-        res_ss_pool[idx] = res_ss_pool[res_ss_pool.size() - 1];
+        if(res_ss_pool.size() > 0) res_ss_pool[idx] = res_ss_pool[res_ss_pool.size() - 1];
         res_ss_pool.pop_back();
     }
     return r;
@@ -291,7 +291,7 @@ int All_Model::pop_res_ls_pool(int idx) {
     if (cc_containers[r]->_h - 1 >= 0 && res_ls.find(nt) != res_ls.end()) {
         res_ls_pool[idx] = nt;
     } else {
-        res_ls_pool[idx] = res_ls_pool[res_ls_pool.size() - 1];
+        if(res_ls_pool.size() > 0) res_ls_pool[idx] = res_ls_pool[res_ls_pool.size() - 1];
         res_ls_pool.pop_back();
     }
     return r;
