@@ -142,9 +142,9 @@ int main(int argc, const char** argv) {
     }
     printf("%s : %lf\n", file_name, Gbest1);
 
-    master->display();
+    // master->display();
     double best_y = master->fx_function_solve(malloc_size, xgbest, true);
-    master->display();
+    // master->display();
     master->ls_analyze();
 
     for (int tt = 0; tt < 10; tt++) {
