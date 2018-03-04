@@ -6,6 +6,10 @@ int TimeGraph::get_type() {
     return 0;
 }
 
+bool TimeGraph::inner(int x) {
+    return x >= min_x && x <= max_x;
+}
+
 bool TimeGraph::outer(int x) {
     return x > max_x;
 }
@@ -23,6 +27,31 @@ std::string TimeGraph::toString() {
     return _str;
 }
 
+void TimeGraph::set_mode(int _mode, int _counter, bool _is_wait){
+    mode = _mode;
+    counter = _counter;
+    is_wait = _is_wait;
+}
+
+void TimeGraph::get_mode(){
+    switch (mode) {
+      case 0:
+        printf("(RES-%d-%d)", counter, is_wait);
+      break;
+      case 1:
+        printf("(IMP-%d-%d)", counter, is_wait);
+      break;
+      case 2:
+        printf("(EXP-%d-%d)", counter, is_wait);
+      break;
+      case 3:
+        printf("(BACK)");
+      break;
+      default:
+      break;
+    }
+}
+
 void TimeGraph::display() {
     for (int i = min_x; i < max_x; i++) {
         int j = get_value(i);
@@ -36,11 +65,11 @@ SlopeTimeGraph::SlopeTimeGraph(int _min_x, int _max_x, int _min_y, int _max_y) {
     max_x = _max_x;
     min_y = _min_y;
     max_y = _max_y;
-    
+
     x_diff = max_x - min_x;
     x_diff /= const_travel_time;
     y_diff = max_y - min_y;
-    
+
 //    printf("X:Y %d %d\n", x_diff, y_diff);
 }
 
@@ -81,4 +110,3 @@ TimeGraph* StableTimeGraph::clone() {
     TimeGraph* n = new StableTimeGraph(this->min_x, this->max_x, this->min_y);
     return n;
 }
-

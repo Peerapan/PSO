@@ -320,6 +320,7 @@ void All_Model::find_res() {
 }
 
 double All_Model::fx_function_solve(int x_size, char* x, bool edited) {
+    int counter = 0;
     double y = 0;
     int start = 0;
     int all = W*L;
@@ -356,6 +357,7 @@ double All_Model::fx_function_solve(int x_size, char* x, bool edited) {
             duration = (abs(last_x - _x) * TRAVEL_TIME);
             if (edited) {
                 ss_graph.push_back(new SlopeTimeGraph((int) y, (int) y + duration, last_x, _x));
+                ss_graph.back()->set_mode(0, counter);
                 printf("MOVE FROM %d, %d TO %d, %d (%lf + %lf -> %lf)\n", last_x, last_y, _x, _y, y, duration, y + duration);
             }
             y += duration;
@@ -365,18 +367,18 @@ double All_Model::fx_function_solve(int x_size, char* x, bool edited) {
         duration = CONTROL_TIME;
         if (edited) {
             ss_graph.push_back(new StableTimeGraph((int) y, (int) y + duration, _x));
+            ss_graph.back()->set_mode(0, counter);
             printf("PICK %d (%lf + %lf -> %lf)\n", r + 1, y, duration, y + duration);
         }
         y += duration;
         duration = (abs(areas[a]->_w - cc_containers[r]->_w) * TRAVEL_TIME);
          if (edited){
             ss_graph.push_back(new SlopeTimeGraph((int) y, (int) y + duration, _x, areas[a]->_w));
+            ss_graph.back()->set_mode(0, counter);
             printf("Move %d( %d, %d, %d ) to ( %d, %d, %d ) (%lf + %lf -> %f)\n", r + 1,
                 cc_containers[r]->_h, cc_containers[r]->_w, cc_containers[r]->_l,
                 areas[a]->_h, areas[a]->_w, areas[a]->_l,
                 y, duration, y + duration);
-        }
-        if(edited){
             mark[cc_containers[r]->_w][cc_containers[r]->_l] = true;
             mark[areas[a]->_w][areas[a]->_l] = true;
         }
@@ -387,6 +389,7 @@ double All_Model::fx_function_solve(int x_size, char* x, bool edited) {
         duration = CONTROL_TIME;
         if (edited) {
             ss_graph.push_back(new StableTimeGraph((int) y, (int) y + duration, areas[a]->_w));
+            ss_graph.back()->set_mode(0, counter++);
             printf("DROP %d (%lf + %lf -> %lf)\n", r + 1, y, duration, y + duration);
         }
         y += duration;
@@ -420,6 +423,7 @@ double All_Model::fx_function_solve(int x_size, char* x, bool edited) {
                 duration = ((last_x + 1) * TRAVEL_TIME);
                 if (edited) {
                     ss_graph.push_back(new SlopeTimeGraph((int) y, (int) y + duration, last_x, -1));
+                    ss_graph.back()->set_mode(1, counter);
                     printf("IMP MOVE FROM %d, %d TO SS (%lf + %lf -> %lf)\n", last_x, last_y, y, duration, y + duration);
                 }
                 y += duration;
@@ -427,12 +431,14 @@ double All_Model::fx_function_solve(int x_size, char* x, bool edited) {
             duration = CONTROL_TIME;
             if (edited) {
                 ss_graph.push_back(new StableTimeGraph((int) y, (int) y + duration, -1));
+                ss_graph.back()->set_mode(1, counter);
                 printf("PICK IMP-%d (%lf + %lf -> %lf)\n", r + 1, y, duration, y + duration);
             }
             y += duration;
             duration = ((areas[a]->_w + 1) * TRAVEL_TIME);
             if (edited) {
                 ss_graph.push_back(new SlopeTimeGraph((int) y, (int) y + duration, -1, areas[a]->_w));
+                ss_graph.back()->set_mode(1, counter);
                 printf("IMP MOVE IMP-%d TO %d (%d, %d, %d) (%lf + %lf -> %lf)\n",
                         r + 1, a + 1, areas[a]->_h, areas[a]->_w, areas[a]->_l,
                         y, duration, y + duration);
@@ -444,6 +450,7 @@ double All_Model::fx_function_solve(int x_size, char* x, bool edited) {
             duration = CONTROL_TIME;
             if (edited) {
                 ss_graph.push_back(new StableTimeGraph((int) y, (int) y + duration, areas[a]->_w));
+                ss_graph.back()->set_mode(1, counter++);
                 printf("DROP IMP-%d (%lf + %lf -> %lf)\n", r + 1,
                         y, duration, y + duration);
             }
@@ -459,6 +466,7 @@ double All_Model::fx_function_solve(int x_size, char* x, bool edited) {
                 duration = (abs(cc_containers[r]->_w - last_x) * TRAVEL_TIME);
                  if (edited){
                     ss_graph.push_back(new SlopeTimeGraph((int) y, (int) y + duration, last_x, cc_containers[r]->_w));
+                    ss_graph.back()->set_mode(2, counter);
                     printf("EXP MOVE FROM %d, %d TO %d (%d, %d, %d) (%lf + %lf -> %lf)\n",
                             last_x, last_y, r + 1, cc_containers[r]->_h, cc_containers[r]->_w, cc_containers[r]->_l, y, duration, y + duration);
                  }
@@ -467,12 +475,14 @@ double All_Model::fx_function_solve(int x_size, char* x, bool edited) {
             duration = CONTROL_TIME;
             if (edited) {
                 ss_graph.push_back(new StableTimeGraph((int) y, (int) y + duration, cc_containers[r]->_w));
+                ss_graph.back()->set_mode(2, counter);
                 printf("PICK %d (%lf + %lf -> %lf)\n", r + 1, y, duration, y + duration);
             }
             y += duration;
             duration = ((cc_containers[r]->_w + 1) * TRAVEL_TIME);
             if (edited) {
                 ss_graph.push_back(new SlopeTimeGraph((int) y, (int) y + duration, cc_containers[r]->_w, -1));
+                ss_graph.back()->set_mode(2, counter);
                 printf("EXP MOVE %d (%d, %d, %d) TO SS (%lf + %lf -> %lf)\n",
                         r + 1, cc_containers[r]->_h, cc_containers[r]->_w, cc_containers[r]->_l, y, duration, y + duration);
                 mark[cc_containers[r]->_w][cc_containers[r]->_l] = true;
@@ -484,6 +494,7 @@ double All_Model::fx_function_solve(int x_size, char* x, bool edited) {
             duration = CONTROL_TIME;
             if (edited) {
                 ss_graph.push_back(new StableTimeGraph((int) y, (int) y + duration, -1));
+                ss_graph.back()->set_mode(2, counter++);
                 printf("DROP %d (%lf + %lf -> %lf)\n", r + 1, y, duration, y + duration);
             }
             y += duration;
@@ -495,6 +506,7 @@ double All_Model::fx_function_solve(int x_size, char* x, bool edited) {
         double duration = (last_x + 1) * TRAVEL_TIME;
         if (edited) {
             ss_graph.push_back(new SlopeTimeGraph((int) y, (int) y + duration, last_x, -1));
+            ss_graph.back()->set_mode(3, counter);
             printf("TRAVEL BACK %d, %d (%lf + %lf -> %lf)\n", last_x, last_y, y, duration, y + duration);
         }
         y += duration;
@@ -503,6 +515,7 @@ double All_Model::fx_function_solve(int x_size, char* x, bool edited) {
 }
 
 double All_Model::fx_function_solve_2(int x_size, char* x, bool edited) {
+    int counter = 0;
     int time_counter = 0;
 
     double y = 0;
@@ -525,74 +538,89 @@ double All_Model::fx_function_solve_2(int x_size, char* x, bool edited) {
         int a = pop_area_pool(des);
         int _x = cc_containers[r]->_w;
         int _y = cc_containers[r]->_l;
+        int prev_time_counter = time_counter;
 
-        double t_y = y;
+        double t_y = y, t_y_start = y;
         double t_duration_0 = 0;
         double t_duration_1 = 0;
         double t_duration_2 = 0;
         double t_duration_3 = 0;
         double t_duration_4 = 0;
-        double shift = 0, total_shift = 0;
+        double shift = 0, total_shift = 0, prev_total_shift = 0;
 
-        t_duration_0 = (abs(W - _x) * TRAVEL_TIME);
-        shift = (double) check_ss_slope(time_counter, (int) t_y, (int) t_duration_0, W, _x);
-        total_shift += shift;
-        t_y += shift;
-        t_y += t_duration_0;
+        do{
+            time_counter = prev_time_counter;
+            prev_total_shift = total_shift;
+            t_y = t_y_start + total_shift;
 
-        t_duration_1 = CONTROL_TIME;
-        shift = (double) check_ss_stable(time_counter, (int) t_y, (int) t_duration_1, _x);
-        total_shift += shift;
-        t_y += shift;
-        t_y += t_duration_1;
-
-        t_duration_2 = (abs(_x - areas[a]->_w) * TRAVEL_TIME);
-        if (t_duration_2 > 0) {
-            shift = (double) check_ss_slope(time_counter, (int) t_y, (int) t_duration_2, _x, areas[a]->_w);
+            t_duration_0 = (abs(W - _x) * TRAVEL_TIME);
+            shift = (double) check_ss_slope(time_counter, (int) t_y, (int) t_duration_0, W, _x);
             total_shift += shift;
             t_y += shift;
-        }
-        t_y += t_duration_2;
+            t_y += t_duration_0;
 
-        t_duration_3 = CONTROL_TIME;
-        shift = (double) check_ss_stable(time_counter, (int) t_y, (int) t_duration_3, areas[a]->_w);
-        total_shift += shift;
-        t_y += shift;
-        t_y += t_duration_3;
+            t_duration_1 = CONTROL_TIME;
+            shift = (double) check_ss_stable(time_counter, (int) t_y, (int) t_duration_1, _x);
+            total_shift += shift;
+            t_y += shift;
+            t_y += t_duration_1;
 
-        t_duration_4 = (abs(areas[a]->_w - W) * TRAVEL_TIME);
-        shift = (double) check_ss_slope(time_counter, (int) t_y, (int) t_duration_4, areas[a]->_w, W);
-        total_shift += shift;
-        t_y += shift;
-        t_y += t_duration_4;
+            t_duration_2 = (abs(_x - areas[a]->_w) * TRAVEL_TIME);
+            if (t_duration_2 > 0) {
+                shift = (double) check_ss_slope(time_counter, (int) t_y, (int) t_duration_2, _x, areas[a]->_w);
+                total_shift += shift;
+                t_y += shift;
+            }
+            t_y += t_duration_2;
+
+            t_duration_3 = CONTROL_TIME;
+            shift = (double) check_ss_stable(time_counter, (int) t_y, (int) t_duration_3, areas[a]->_w);
+            total_shift += shift;
+            t_y += shift;
+            t_y += t_duration_3;
+
+            t_duration_4 = (abs(areas[a]->_w - W) * TRAVEL_TIME);
+            shift = (double) check_ss_slope(time_counter, (int) t_y, (int) t_duration_4, areas[a]->_w, W);
+            total_shift += shift;
+            t_y += shift;
+            t_y += t_duration_4;
+        }while(prev_total_shift != total_shift);
+
         if (edited) {
             if (total_shift > 0) {
                 printf("WAIT %lf (%f + %f -> %f)\n", total_shift, y, total_shift, y + total_shift);
                 ls_graph.push_back(new StableTimeGraph((int) y, (int) y + total_shift, W));
+                ls_graph.back()->set_mode(0, counter, true);
             };
             y += total_shift;
             printf("MOVE FROM LS TO %d, %d (%lf + %lf -> %lf)\n", _x, _y,
                     y, t_duration_0, y + t_duration_0);
             ls_graph.push_back(new SlopeTimeGraph((int) y, (int) y + t_duration_0, W, _x));
+            ls_graph.back()->set_mode(0, counter);
             y += t_duration_0;
             printf("PICK %d (%lf + %lf -> %lf)\n", r + 1, y, t_duration_1, y + t_duration_1);
             ls_graph.push_back(new StableTimeGraph((int) y, (int) y + t_duration_1, _x));
+            ls_graph.back()->set_mode(0, counter);
             y += t_duration_1;
             printf("Move %d( %d, %d, %d ) to ( %d, %d, %d ) (%lf +%lf -> %f)\n", r + 1,
                     cc_containers[r]->_h, cc_containers[r]->_w, cc_containers[r]->_l,
                     areas[a]->_h, areas[a]->_w, areas[a]->_l,
                     y, t_duration_2, y + t_duration_2);
-            if( t_duration_2 > 0)
-            ls_graph.push_back(new SlopeTimeGraph((int) y, (int) y + t_duration_2, _x, areas[a]->_w));
-            y += t_duration_2;
+            if( t_duration_2 > 0){
+                ls_graph.push_back(new SlopeTimeGraph((int) y, (int) y + t_duration_2, _x, areas[a]->_w));
+                ls_graph.back()->set_mode(0, counter);
+                y += t_duration_2;
+            }
             printf("DROP %d (%lf + %lf -> %lf)\n", r + 1,
                     y, t_duration_3, y + t_duration_3);
             ls_graph.push_back(new StableTimeGraph((int) y, (int) y + t_duration_3, areas[a]->_w));
+            ls_graph.back()->set_mode(0, counter);
             y += t_duration_3;
             printf("Move ( %d, %d, %d ) to LS (%lf + %lf -> %lf)\n",
                     areas[a]->_h, areas[a]->_w, areas[a]->_l,
                     y, t_duration_4, y + t_duration_4);
             ls_graph.push_back(new SlopeTimeGraph((int) y, (int) y + t_duration_4, areas[a]->_w, W));
+            ls_graph.back()->set_mode(0, counter++);
             y += t_duration_4;
         } else {
             y += total_shift;
@@ -625,61 +653,73 @@ double All_Model::fx_function_solve_2(int x_size, char* x, bool edited) {
             int a = pop_area_pool(idx_a);
             int idx_r = adjust(it, front_num - 1, imp_ls_pool.size() - 1);
             int r = pop_pool(imp_ls_pool, idx_r);
+            int prev_time_counter = time_counter;
 
-            double t_y = y;
+            double t_y = y, t_y_start = y;
             double t_duration_0 = 0;
             double t_duration_1 = 0;
             double t_duration_2 = 0;
             double t_duration_3 = 0;
-            double shift = 0, total_shift = 0;
+            double shift = 0, total_shift = 0, prev_total_shift = 0;
 
-            t_duration_0 = CONTROL_TIME;
-            shift = (double) check_ss_stable(time_counter, (int) t_y, (int) t_duration_0, W);
-            total_shift += shift;
-            t_y += shift;
-            t_y += t_duration_0;
+            do{
+                time_counter = prev_time_counter;
+                prev_total_shift = total_shift;
+                t_y = t_y_start + total_shift;
 
-            t_duration_1 = (abs(areas[a]->_w - W) * TRAVEL_TIME);
-            shift = (double) check_ss_slope(time_counter, (int) t_y, (int) t_duration_1, W, areas[a]->_w);
-            total_shift += shift;
-            t_y += shift;
-            t_y += t_duration_1;
+                t_duration_0 = CONTROL_TIME;
+                shift = (double) check_ss_stable(time_counter, (int) t_y, (int) t_duration_0, W);
+                total_shift += shift;
+                t_y += shift;
+                t_y += t_duration_0;
 
-            t_duration_2 = CONTROL_TIME;
-            shift = (double) check_ss_stable(time_counter, (int) t_y, (int) t_duration_2, areas[a]->_w);
-            total_shift += shift;
-            t_y += shift;
-            t_y += t_duration_2;
+                t_duration_1 = (abs(areas[a]->_w - W) * TRAVEL_TIME);
+                shift = (double) check_ss_slope(time_counter, (int) t_y, (int) t_duration_1, W, areas[a]->_w);
+                total_shift += shift;
+                t_y += shift;
+                t_y += t_duration_1;
 
-            t_duration_3 = (abs(W - areas[a]->_w) * TRAVEL_TIME);
-            shift = (double) check_ss_slope(time_counter, (int) t_y, (int) t_duration_3, areas[a]->_w, W);
-            total_shift += shift;
-            t_y += shift;
-            t_y += t_duration_3;
+                t_duration_2 = CONTROL_TIME;
+                shift = (double) check_ss_stable(time_counter, (int) t_y, (int) t_duration_2, areas[a]->_w);
+                total_shift += shift;
+                t_y += shift;
+                t_y += t_duration_2;
+
+                t_duration_3 = (abs(W - areas[a]->_w) * TRAVEL_TIME);
+                shift = (double) check_ss_slope(time_counter, (int) t_y, (int) t_duration_3, areas[a]->_w, W);
+                total_shift += shift;
+                t_y += shift;
+                t_y += t_duration_3;
+            }while(prev_total_shift != total_shift);
 
             if (edited) {
                 if (total_shift > 0) {
                     printf("WAIT %lf (%lf + %lf -> %lf)\n", total_shift, y, total_shift, y + total_shift);
                     ls_graph.push_back(new StableTimeGraph((int) y, (int) y + total_shift, W));
+                    ls_graph.back()->set_mode(1, counter, true);
                 }
                 y += total_shift;
                 printf("PICK IMP-%d (%lf + %lf -> %lf)\n", r + 1,
                         y, t_duration_0, y + t_duration_0);
                 ls_graph.push_back(new StableTimeGraph((int) y, (int) y + t_duration_0, W));
+                ls_graph.back()->set_mode(1, counter);
                 y += t_duration_0;
                 printf("IMP MOVE IMP-%d TO %d (%d, %d, %d) (%lf + %lf -> %lf)\n",
                         r + 1, a + 1, areas[a]->_h, areas[a]->_w, areas[a]->_l,
                         y, t_duration_1, y + t_duration_1);
                 ls_graph.push_back(new SlopeTimeGraph((int) y, (int) y + t_duration_1, W, areas[a]->_w));
+                ls_graph.back()->set_mode(1, counter);
                 y += t_duration_1;
                 printf("DROP IMP-%d (%lf + %lf -> %lf)\n", r + 1,
                         y, t_duration_2, y + t_duration_2);
                 ls_graph.push_back(new StableTimeGraph((int) y, (int) y + t_duration_2, areas[a]->_w));
+                ls_graph.back()->set_mode(1, counter);
                 y += t_duration_2;
                 printf("Move ( %d, %d, %d ) to LS (%lf + %lf -> %lf)\n",
                         areas[a]->_h, areas[a]->_w, areas[a]->_l,
                         y, t_duration_3, y + t_duration_3);
                 ls_graph.push_back(new SlopeTimeGraph((int) y, (int) y + t_duration_3, areas[a]->_w, W));
+                ls_graph.back()->set_mode(1, counter++);
                 y += t_duration_3;
             } else {
                 y += total_shift;
@@ -692,61 +732,73 @@ double All_Model::fx_function_solve_2(int x_size, char* x, bool edited) {
             //! EXPORT
             int idx_r = adjust(it, front_num - 1, exp_ls_pool.size() - 1);
             int r = pop_pool(exp_ls_pool, idx_r);
+            int prev_time_counter = time_counter;
 
-            double t_y = y;
+            double t_y = y, t_y_start = y;
             double t_duration_0 = 0;
             double t_duration_1 = 0;
             double t_duration_2 = 0;
             double t_duration_3 = 0;
-            double shift = 0, total_shift = 0;
+            double shift = 0, total_shift = 0, prev_total_shift = 0;
 
-            t_duration_0 = abs(cc_containers[r]->_w - W) * TRAVEL_TIME;
-            shift = (double) check_ss_slope(time_counter, (int) t_y, (int) t_duration_0, W, cc_containers[r]->_w);
-            total_shift += shift;
-            t_y += shift;
-            t_y += t_duration_0;
+            do{
+                time_counter = prev_time_counter;
+                prev_total_shift = total_shift;
+                t_y = t_y_start + total_shift;
 
-            t_duration_1 = CONTROL_TIME;
-            shift = (double) check_ss_stable(time_counter, (int) t_y, (int) t_duration_1, cc_containers[r]->_w);
-            total_shift += shift;
-            t_y += shift;
-            t_y += t_duration_1;
+                t_duration_0 = abs(cc_containers[r]->_w - W) * TRAVEL_TIME;
+                shift = (double) check_ss_slope(time_counter, (int) t_y, (int) t_duration_0, W, cc_containers[r]->_w);
+                total_shift += shift;
+                t_y += shift;
+                t_y += t_duration_0;
 
-            t_duration_2 = abs(W - cc_containers[r]->_w) * TRAVEL_TIME;
-            shift = (double) check_ss_slope(time_counter, (int) t_y, (int) t_duration_2, cc_containers[r]->_w, W);
-            total_shift += shift;
-            t_y += shift;
-            t_y += t_duration_2;
+                t_duration_1 = CONTROL_TIME;
+                shift = (double) check_ss_stable(time_counter, (int) t_y, (int) t_duration_1, cc_containers[r]->_w);
+                total_shift += shift;
+                t_y += shift;
+                t_y += t_duration_1;
 
-            t_duration_3 = CONTROL_TIME;
-            shift = (double) check_ss_stable(time_counter, (int) t_y, (int) t_duration_3, W);
-            total_shift += shift;
-            t_y += shift;
-            t_y += t_duration_3;
+                t_duration_2 = abs(W - cc_containers[r]->_w) * TRAVEL_TIME;
+                shift = (double) check_ss_slope(time_counter, (int) t_y, (int) t_duration_2, cc_containers[r]->_w, W);
+                total_shift += shift;
+                t_y += shift;
+                t_y += t_duration_2;
+
+                t_duration_3 = CONTROL_TIME;
+                shift = (double) check_ss_stable(time_counter, (int) t_y, (int) t_duration_3, W);
+                total_shift += shift;
+                t_y += shift;
+                t_y += t_duration_3;
+            }while(prev_total_shift != total_shift);
 
             if (edited) {
                 if (total_shift > 0) {
                     printf("WAIT %lf (%lf + %lf -> %lf)\n", total_shift, y, total_shift, y + total_shift);
                     ls_graph.push_back(new StableTimeGraph((int) y, (int) y + total_shift, W));
+                    ls_graph.back()->set_mode(2, counter, true);
                 }
                 y += total_shift;
                 printf("EXP MOVE FROM LS TO %d (%d, %d, %d) (%lf + %lf -> %lf)\n",
                         r + 1, cc_containers[r]->_h, cc_containers[r]->_w, cc_containers[r]->_l,
                         y, t_duration_0, y + t_duration_0);
                 ls_graph.push_back(new SlopeTimeGraph((int) y, (int) y + t_duration_0, W, cc_containers[r]->_w));
+                ls_graph.back()->set_mode(2, counter);
                 y += t_duration_0;
                 printf("PICK %d (%lf + %lf -> %lf)\n", r + 1,
                         y, t_duration_1, y + t_duration_1);
                 ls_graph.push_back(new StableTimeGraph((int) y, (int) y + t_duration_1, cc_containers[r]->_w));
+                ls_graph.back()->set_mode(2, counter);
                 y += t_duration_1;
                 printf("EXP MOVE %d (%d, %d, %d) TO LS (%lf + %lf -> %lf)\n",
                         r + 1, cc_containers[r]->_h, cc_containers[r]->_w, cc_containers[r]->_l,
                         y, t_duration_2, y + t_duration_2);
                 ls_graph.push_back(new SlopeTimeGraph((int) y, (int) y + t_duration_2, cc_containers[r]->_w, W));
+                ls_graph.back()->set_mode(2, counter);
                 y += t_duration_2;
                 printf("DROP %d (%lf + %lf -> %lf)\n", r + 1,
                         y, t_duration_3, y + t_duration_3);
                 ls_graph.push_back(new StableTimeGraph((int) y, (int) y + t_duration_3, W));
+                ls_graph.back()->set_mode(2, counter++);
                 y += t_duration_3;
             } else {
                 y += total_shift;
@@ -805,6 +857,7 @@ void All_Model::display() {
             d = static_cast<StableTimeGraph*>(ss_graph[i])->get_value(x);
         }
         printf("\t%d",d);
+        ss_graph[i]->get_mode();
         if(ss_graph[i]->outer(x)){
           i++;
         }
@@ -818,6 +871,7 @@ void All_Model::display() {
             e = static_cast<StableTimeGraph*>(ls_graph[j])->get_value(x);
         }
         printf("\t%d",e);
+        ls_graph[j]->get_mode();
         if(ls_graph[j]->outer(x)){
           j++;
         }
@@ -851,6 +905,11 @@ int All_Model::check_ss(TimeGraph* src, int& time_counter, int start_time) {
     int shifter = 0;
     int i = start_time;
     int j = start_time;
+    if( time_counter < ss_graph.size() ){
+        while( !ss_graph[time_counter]->inner(i) && time_counter < ss_graph.size() ){
+            time_counter++;
+        }
+    }
     while (time_counter < ss_graph.size()) {
         bool ret = TimeGraph::compare(ss_graph[time_counter], src, i + shifter, j);
         if (ret) {
