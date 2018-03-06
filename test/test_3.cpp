@@ -143,7 +143,7 @@ int main(int argc, const char** argv) {
     printf("%s : %lf\n", file_name, Gbest1);
 
     // master->display();
-    double best_y = master->fx_function_solve(malloc_size, xgbest, true);
+    double best_y_1 = master->fx_function_solve(malloc_size, xgbest, true);
     // master->display();
     master->ls_analyze();
 
@@ -249,10 +249,11 @@ int main(int argc, const char** argv) {
     }
     printf("%s : %lf\n", file_name, Gbest1);
 
-    best_y = master->fx_function_solve_2(malloc_size, xgbest, true);
+    double best_y_2 = master->fx_function_solve_2(malloc_size, xgbest, true);
     master->display();
 
-    printf("Best Result: %lf\n", best_y);
+    printf("Best Result SS: %lf\n", best_y_1);
+    printf("Best Result LS: %lf\n", best_y_2);
 
     for (int i = 0; i < popsize; i++) {
         free(x[i]);
