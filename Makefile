@@ -1,7 +1,7 @@
 # Define the symbols we might want to change:
 
 CXX	:= c++
-CXXFLAGS := -g -std=c++14
+CXXFLAGS := -g -std=c++14 -o3
 
 OBJECTS	:= build/function.o build/test_1.o
 OBJECTS2 := build/function.o build/model.o build/ss_model.o build/test_2.o
@@ -21,27 +21,27 @@ build/test_2: $(OBJECTS2)
 
 build/test_2.o: test/test_2.cpp
 	$(CXX) $(CXXFLAGS) -I./include -c  test/test_2.cpp -o build/test_2.o
-	
+
 build/test_3: $(OBJECTS3)
 	$(CXX) $(OBJECTS3) -o build/test_3
 
 build/test_3.o: test/test_3.cpp
 	$(CXX) $(CXXFLAGS) -I./include -c  test/test_3.cpp -o build/test_3.o
-	
+
 build/test_graph: $(OBJECTS_GRAPH)
 	$(CXX) $(OBJECTS_GRAPH) -I./include -o build/test_graph $(CXXFLAGS)
-	
+
 build/linear_graph.o: src/linear_graph.cpp
 	$(CXX) $(INCLUDES) -I./include $(CXXFLAGS) -c src/linear_graph.cpp -o build/linear_graph.o
-		
+
 build/model.o: src/model.cpp
 	$(CXX) $(INCLUDES) -I./include $(CXXFLAGS) -c src/model.cpp -o build/model.o
-	
+
 build/ss_model.o: src/ss_model.cpp
 	$(CXX) $(INCLUDES) -I./include $(CXXFLAGS) -c src/ss_model.cpp -o build/ss_model.o
 
 build/all_model.o: src/all_model.cpp
 	$(CXX) $(INCLUDES) -I./include $(CXXFLAGS) -c src/all_model.cpp -o build/all_model.o
-	
+
 build/function.o: src/function.cpp
 	$(CXX) $(INCLUDES) -I./include $(CXXFLAGS) -c src/function.cpp -o build/function.o

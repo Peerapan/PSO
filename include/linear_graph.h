@@ -3,7 +3,7 @@
 
 #include <string>
 
-const int const_travel_time = 2;
+const int const_travel_time = 3;
 
 // y=mx+b
 

@@ -53,8 +53,8 @@ private:
     std::vector<TimeGraph*> ss_graph;
     std::vector<TimeGraph*> ls_graph;
 
-    const static int TRAVEL_TIME = 2;
-    const static int CONTROL_TIME = 10;
+    const static int TRAVEL_TIME = 3;
+    const static int CONTROL_TIME = 28;
 
     void load_data(const char* file);
     void analyze();

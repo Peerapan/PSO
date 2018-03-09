@@ -6,6 +6,7 @@
 #include <string.h>
 #include <math.h>
 #include <limits>
+#include <time.h>
 
 //#define DEBUG
 

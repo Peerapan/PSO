@@ -6,6 +6,7 @@
 #include <string.h>
 #include <math.h>
 #include <limits>
+#include <time.h>
 
 //#define DEBUG
 
@@ -13,10 +14,10 @@
 
 int main(int argc, const char** argv) {
     const char* file_name = argv[1];
-    
+
     std::map<std::string, double> configs;
     read_configs(configs);
-    
+
     SS_Model* master = new SS_Model(file_name);
     int malloc_size = master->get_bit_size();
 
