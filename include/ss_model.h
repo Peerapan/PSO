@@ -30,25 +30,25 @@ private:
     std::vector<int> exp_pool;
     std::vector<int> res_pool;
 
-    const static int TRAVEL_TIME = 2;
-    const static int CONTROL_TIME = 10;
+    const static int TRAVEL_TIME = 3;
+    const static int CONTROL_TIME = 28;
 
     void load_data(const char* file);
     void analyze();
     int calculate_malloc_size();
 
     void find_res();
-    
+
 public:
     SS_Model();
     SS_Model(const char*& input);
     ~SS_Model();
     SS_Model* clone();
-    
+
     int pop_pool(std::vector<int>& pool, int idx);
     int pop_area_pool(int a);
     int pop_res_pool(int a);
-    
+
     double fx_function_solve(int x_size, char* x, bool display);
 
     inline int get_bit_size() const {
